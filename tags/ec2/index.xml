@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Ec2 on あしたから本気だす</title>
+    <link>http://blog.enokawa.co/tags/ec2/</link>
+    <description>Recent content in Ec2 on あしたから本気だす</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>ja-jp</language>
+    <lastBuildDate>Thu, 14 Jun 2018 12:15:49 +0900</lastBuildDate>
+    
+	<atom:link href="http://blog.enokawa.co/tags/ec2/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>EFSをVPCペアリング経由でマウントする</title>
+      <link>http://blog.enokawa.co/2018/06/14/mount-efs-via-vpc-peering/</link>
+      <pubDate>Thu, 14 Jun 2018 12:15:49 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2018/06/14/mount-efs-via-vpc-peering/</guid>
+      <description>はじめに こんにちはえのかわです。前回は単純に autofs で EFS をマウントしましたが、今回は VPC Peering経由でマウントしてみたいと思います。
+AWS のドキュメントには、VPN や VPC Peering 経由ではマウントできないとの記述があります。
+ AWS Direct Connect を使用して、オンプレミスのデータセンターサーバーから Amazon EFS ファイルシステムをマウントできます。ただし、VPN 接続や VPC ピア接続などの他の VPC プライベート接続機能はサポートされていません。
+ https://docs.aws.amazon.com/ja_jp/efs/latest/ug/limits.html
+クラメソさんの記事を参考にさせてもらいました。
+SSH ポートフォワーディングを使って EFS を Mac からマウントしてみた
+AWS リソース作成 こんな感じで作成しました。東京リージョンからオレゴンリージョンの EC2 を経由して EFS をマウントします。RouteTable や SecurityGroup の設定はお互い通信できるように事前に済ませておきましょう。 EC2設定(東京側) オレゴン側の設定は特に必要ありません。こういう感じで東京の EC2 からオレゴンの EC2 に SSH できるように設定しておきます。
+[ec2-user@ip-10-0-0-79 ~]$ ssh -i .ssh/enokawa-kensho-us-west-2.pem ec2-user@172.31.38.154 Last login: Thu Jun 14 03:40:07 2018 from 10.0.0.79 __| __|_ ) _| ( / Amazon Linux AMI ___|\___|___| https://aws.</description>
+    </item>
+    
+    <item>
+      <title>autofsでEFSをマウントする</title>
+      <link>http://blog.enokawa.co/2018/06/13/mount-efs-with-autofs/</link>
+      <pubDate>Wed, 13 Jun 2018 15:05:15 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2018/06/13/mount-efs-with-autofs/</guid>
+      <description>はじめに こんにちはえのかわです。EFS、東京リージョン対応がアナウンスされましたね。
+リリース前にちょいと検証してみます。単純にマウントするだけではつまらないので autofs でマウントしてみます。
+AWS リソース作成 こんな感じで作成しました。リージョンはオレゴンでやってます。OS は Amazon Linux です。 EC2設定 autofs をインストールしてマウントポイント用のディレクトリを作成します。
+[ec2-user@ip-172-31-38-110 ~]$ sudo yum install autofs [ec2-user@ip-172-31-38-110 ~]$ sudo mkdir /exports  続いて autofs の設定です。
+[ec2-user@ip-172-31-38-110 ~]$ sudo sh -c &amp;quot;echo &#39;/- /etc/auto.nfs --timeout=3&#39; &amp;gt;&amp;gt; /etc/auto.master&amp;quot; [ec2-user@ip-172-31-38-110 ~]$ cat /etc/auto.nfs /exports -nfsvers=4.1 us-west-2a.fs-xxxxxxxx.efs.us-west-2.amazonaws.com:/  autofs 起動します。
+[ec2-user@ip-172-31-38-110 ~]$ sudo /etc/init.d/autofs start Starting automount: [ OK ]  /exports ディレクトリに移動するとマウントされていることが確認できました。
+[ec2-user@ip-172-31-38-110 ~]$ df -h Filesystem Size Used Avail Use% Mounted on devtmpfs 484M 56K 484M 1% /dev tmpfs 494M 0 494M 0% /dev/shm /dev/xvda1 7.</description>
+    </item>
+    
+    <item>
+      <title>Serverless FrameworkでEC2を定期的に起動/停止するdawnを公開しました</title>
+      <link>http://blog.enokawa.co/2018/02/14/dawn/</link>
+      <pubDate>Wed, 14 Feb 2018 00:26:12 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2018/02/14/dawn/</guid>
+      <description>はじめに こんにちはえのかわです。タイトルの通り、EC2 を定期的に起動/停止するツール、名付けて dawn をリリースしました。
+enokawa/dawn: Lambda function to automaticaly stop and start the EC2 instance.
+dawn?? dawn とは 夜明け、明け方 という意味です。名付け親は id:iga-ninja さんです。どうも良い名前が決まらなくて決めてもらいました。発音は dän, dôn だそうです。どぁ〜ん。
+きっかけ 業務のなかで、よく EC2 を定期的に停止/起動するケースがあるので、どうせなら Serverless Framework でと思い作成しました。けっこうありきたりですが、EC2 の費用削減にもなりますし僕も利用者の一人です。
+また、dawn は EC2 の AMI をスケジュールで取得する y13i/amirotate を参考にして作成しました。amirotate に限らず、y13i さんのレポジトリはすごく参考になります。
+おわりに 今回は単純なスクリプトですが、今後もガンガン Serverless Framework 使っていきます。何か要望などあれば Pull Request いただけると僕が喜びます。</description>
+    </item>
+    
+    <item>
+      <title>【re:Invent2017レポート】NetflixはパフォーマンスのためにどのようにEC2をチューニングしているか</title>
+      <link>http://blog.enokawa.co/2017/11/29/how-netflix-tunes-amazon-ec2-instances-for-performance/</link>
+      <pubDate>Wed, 29 Nov 2017 18:09:58 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2017/11/29/how-netflix-tunes-amazon-ec2-instances-for-performance/</guid>
+      <description>はじめに こんにちはえのかわです。下記のセッションレポートです。
+CMP325 - How Netflix Tunes Amazon EC2 Instances for Performance
+ インスタンスタイプの選定  Netflix の AWS 環境  AutoScalingを採用  30 ものインスタンスタイプを使い分けている  ファミリーは m4 / c5 / i3, d2 / r4, x1 / p2, g3, f1 medium から 16xlarge(以上) まで  インスタンス選択のフローチャート    全てのインスタンスタイプでロードテスト(スループット計測)を行っている  EC2 インスタンスの費用についても計測し、効率の良いインスタンスタイプを選定する インスタンス選定用のツールも自前で作成している    カーネルチューニング  Netflix では Ubuntu Linux を利用している  基本的なパフォーマンスチューニングを施しているベースの AMI を持っている  CPU スケジュール  # schedtool -B PID  仮想メモリ  vm.</description>
+    </item>
+    
+  </channel>
+</rss>

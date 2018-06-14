@@ -1,0 +1,196 @@
+
+<!DOCTYPE html>
+<html lang="ja-jp">
+<head>
+
+  
+  <meta charset="UTF-8">
+  <title>
+    EFSをVPCペアリング経由でマウントする | あしたから本気だす
+  </title>
+
+
+  
+  <meta name="viewport" content="width=device-width,user-scalable=no,maximum-scale=1,initial-scale=1">
+
+  
+  <link rel="canonical" href="http://blog.enokawa.co/2018/06/14/mount-efs-via-vpc-peering/"/>
+
+  
+  <link rel="stylesheet" href="/css/sanitize.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+  <link rel="stylesheet" href="/css/highlight_monokai.css">
+  <link rel="stylesheet" href="/css/theme.css">
+  <link rel="stylesheet" href="/css/custom.css">
+  
+  
+  <link href="http://blog.enokawa.co/index.xml" rel="alternate" type="application/rss+xml" title="あしたから本気だす" />
+  <link href="http://blog.enokawa.co/index.xml" rel="feed" type="application/rss+xml" title="あしたから本気だす" />
+
+  
+  
+
+
+</head>
+
+
+
+<body>
+<div class="container">
+
+  
+  <header role="banner">
+    <div class="row gutters">
+      <div id="site-title" class="col span_6">
+        <h1><a href="http://blog.enokawa.co/">あしたから本気だす</a></h1>
+        
+      </div>
+      <div id="social" class="col span_6">
+        <ul>
+          <li><a href="https://twitter.com/enkw_" target="_blank">Twitter</a></li>
+          <li><a href="https://facebook.com/naoto.enokawa" target="_blank">Facebook</a></li>
+          <li><a href="https://github.com/enokawa" target="_blank">GitHub</a></li>
+          
+        </ul>
+      </div>
+    </div>
+  </header>
+
+
+  
+  <main id="single" role="main">
+    <div class="article-header">
+      <h1>EFSをVPCペアリング経由でマウントする</h1>
+      <div class="meta">
+        Jun 14, 2018 &nbsp;
+        
+          #<a href="/tags/aws">aws</a>&nbsp;
+        
+          #<a href="/tags/ec2">ec2</a>&nbsp;
+        
+          #<a href="/tags/efs">efs</a>&nbsp;
+        
+      </div>
+    </div>
+    <article>
+      
+
+<h2 id="はじめに">はじめに</h2>
+
+<p>こんにちは<a href="https://twitter.com/enkw_">えのかわ</a>です。前回は単純に <a href="/2018/06/13/mount-efs-with-autofs/">autofs で EFS をマウント</a>しましたが、今回は VPC Peering経由でマウントしてみたいと思います。<br />
+AWS のドキュメントには、VPN や VPC Peering 経由ではマウントできないとの記述があります。</p>
+
+<blockquote>
+<p>AWS Direct Connect を使用して、オンプレミスのデータセンターサーバーから Amazon EFS ファイルシステムをマウントできます。ただし、VPN 接続や VPC ピア接続などの他の VPC プライベート接続機能はサポートされていません。</p>
+</blockquote>
+
+<p><a href="https://docs.aws.amazon.com/ja_jp/efs/latest/ug/limits.html">https://docs.aws.amazon.com/ja_jp/efs/latest/ug/limits.html</a></p>
+
+<p>クラメソさんの記事を参考にさせてもらいました。<br />
+<a href="https://dev.classmethod.jp/cloud/aws/mount-efs-over-ssh/">SSH ポートフォワーディングを使って EFS を Mac からマウントしてみた</a></p>
+
+<h2 id="aws-リソース作成">AWS リソース作成</h2>
+
+<p>こんな感じで作成しました。東京リージョンからオレゴンリージョンの EC2 を経由して EFS をマウントします。RouteTable や SecurityGroup の設定はお互い通信できるように事前に済ませておきましょう。
+<img src="/images/efs2.png"></p>
+
+<h2 id="ec2設定-東京側">EC2設定(東京側)</h2>
+
+<p>オレゴン側の設定は特に必要ありません。こういう感じで東京の EC2 からオレゴンの EC2 に SSH できるように設定しておきます。</p>
+
+<pre><code class="language-sh">[ec2-user@ip-10-0-0-79 ~]$ ssh -i .ssh/enokawa-kensho-us-west-2.pem ec2-user@172.31.38.154
+Last login: Thu Jun 14 03:40:07 2018 from 10.0.0.79
+
+       __|  __|_  )
+       _|  (     /   Amazon Linux AMI
+      ___|\___|___|
+
+https://aws.amazon.com/amazon-linux-ami/2018.03-release-notes/
+11 package(s) needed for security, out of 13 available
+Run &quot;sudo yum update&quot; to apply all updates.
+[ec2-user@ip-172-31-38-154 ~]$
+</code></pre>
+
+<p>ポートフォワードしてみます。 <code>-fN</code> オプションを用いてバックグラウンドでプロセスを動かし続けます。</p>
+
+<pre><code>[ec2-user@ip-10-0-0-79 ~]$ ssh -i .ssh/enokawa-kensho-us-west-2.pem -fN -L 2049:us-west-2a.fs-xxxxxxxx.efs.us-west-2.amazonaws.com:2049 ec2-user@172.31.38.154
+[ec2-user@ip-10-0-0-79 ~]$ ps aux | grep &quot;ssh -[i]&quot;
+ec2-user  2839  0.0  0.0 173520   884 ?        Ss   03:47   0:00 ssh -i .ssh/enokawa-kensho-us-west-2.pem -fN -L 2049:us-west-2a.fs-xxxxxxxx.efs.us-west-2.amazonaws.com:2049 ec2-user@172.31.38.154
+</code></pre>
+
+<p>マウントしてみます。</p>
+
+<pre><code>[ec2-user@ip-10-0-0-79 ~]$ sudo mkdir /exports
+[ec2-user@ip-10-0-0-79 ~]$ sudo mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 localhost:/ /exports
+[ec2-user@ip-10-0-0-79 ~]$ df -h
+Filesystem      Size  Used Avail Use% Mounted on
+devtmpfs        484M   60K  484M   1% /dev
+tmpfs           494M     0  494M   0% /dev/shm
+/dev/xvda1      7.8G  1.1G  6.7G  14% /
+localhost:/     8.0E     0  8.0E   0% /exports
+</code></pre>
+
+<p>マウントできました。ただ通常のマウントよりも少しラグはあります。ポートフォワーディングかつリージョンまたいでるのでしょうがないですね。</p>
+
+<h2 id="おわりに">おわりに</h2>
+
+<p>オンプレミス環境などから EFS をマウントする場合は DirectConnect 経由の方がよさそうです。</p>
+
+      
+      
+      
+    </article>
+    
+ <aside><div id="disqus_thread"></div></aside>
+
+<script type="text/javascript">
+     
+    var disqus_shortname = 'blog-enokawa-co';
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+
+
+
+  </main>
+  
+  <nav class="pagination-single">
+    
+      <span class="previous">&larr; <a href="http://blog.enokawa.co/2018/06/13/mount-efs-with-autofs/" rel="prev">autofsでEFSをマウントする</a></span>
+    
+    
+  </nav>
+
+
+  
+  <footer role="contentinfo">
+    <div style="text-align:center;">
+      <img src="/images/profile.png" width="64" height="64"><br>
+      Written by Naoto Enokawa
+    </div>
+  </footer>
+
+
+</div>
+
+<script src="/js/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script>
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-64780065-1', 'auto');
+	ga('send', 'pageview');
+</script>
+
+</body>
+</html>
+

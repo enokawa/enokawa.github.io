@@ -1,0 +1,282 @@
+
+<!DOCTYPE html>
+<html lang="ja-jp">
+<head>
+
+  
+  <meta charset="UTF-8">
+  <title>
+    VagrantでWordPress環境を作る（MacOSX編） | あしたから本気だす
+  </title>
+
+
+  
+  <meta name="viewport" content="width=device-width,user-scalable=no,maximum-scale=1,initial-scale=1">
+
+  
+  <link rel="canonical" href="http://blog.enokawa.co/2015/09/06/vagrant-on-macos/"/>
+
+  
+  <link rel="stylesheet" href="/css/sanitize.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+  <link rel="stylesheet" href="/css/highlight_monokai.css">
+  <link rel="stylesheet" href="/css/theme.css">
+  <link rel="stylesheet" href="/css/custom.css">
+  
+  
+  <link href="http://blog.enokawa.co/index.xml" rel="alternate" type="application/rss+xml" title="あしたから本気だす" />
+  <link href="http://blog.enokawa.co/index.xml" rel="feed" type="application/rss+xml" title="あしたから本気だす" />
+
+  
+  
+
+
+</head>
+
+
+
+<body>
+<div class="container">
+
+  
+  <header role="banner">
+    <div class="row gutters">
+      <div id="site-title" class="col span_6">
+        <h1><a href="http://blog.enokawa.co/">あしたから本気だす</a></h1>
+        
+      </div>
+      <div id="social" class="col span_6">
+        <ul>
+          <li><a href="https://twitter.com/enkw_" target="_blank">Twitter</a></li>
+          <li><a href="https://facebook.com/naoto.enokawa" target="_blank">Facebook</a></li>
+          <li><a href="https://github.com/enokawa" target="_blank">GitHub</a></li>
+          
+        </ul>
+      </div>
+    </div>
+  </header>
+
+
+  
+  <main id="single" role="main">
+    <div class="article-header">
+      <h1>VagrantでWordPress環境を作る（MacOSX編）</h1>
+      <div class="meta">
+        Sep 6, 2015 &nbsp;
+        
+          #<a href="/tags/vagrant">vagrant</a>&nbsp;
+        
+          #<a href="/tags/mac">mac</a>&nbsp;
+        
+      </div>
+    </div>
+    <article>
+      
+
+<h2 id="はじめに">はじめに</h2>
+
+<p>こんにちは、<a href="https://twitter/enkw_">えのかわ</a>です。<br />
+今回の記事は自分用の備忘録です。WordPress環境の作成を目標に進めていきます。<br />
+構成は以下のような感じです。</p>
+
+<ul>
+<li>CentOS 6.5</li>
+<li>Apache 2.2系</li>
+<li>MySQL 5.1系</li>
+<li>PHP 5.3系</li>
+<li>WordPress 最新版</li>
+</ul>
+
+<h2 id="virtualboxのインストール">VirtualBoxのインストール</h2>
+
+<p><a href="https://www.virtualbox.org/wiki/Download_Old_Builds_5_0">VirtualBoxのダウンロードページ(Old Builds)</a>からVirtual5.0をインストールします。最新バージョン(5.02)だと<a href="http://qiita.com/medaka5/items/d70751a562a5604c2115">vagrant upでコケる</a>みたいです。
+環境にもよりますが、インストールに5分ほど時間かかります。 <code>VirtualBox.pkj</code>をダブルクリックしてウィザードに従って進めてください。
+<img src="/images/vagrant-on-macos1.png"></p>
+
+<h2 id="vagrantのインストール">Vagrantのインストール</h2>
+
+<p><a href="https://www.vagrantup.com/downloads.html">Vagrantのダウンロードページ</a>からインストールします。
+こちらもインストールに5分ほどかかります。VirtualBoxと同様に、ウィザードに従って進めていきます。
+<img src="/images/vagrant-on-macos2.png"></p>
+
+<h2 id="boxのインストール">Boxのインストール</h2>
+
+<p>OSのイメージであるBoxをインストールしてVagrantのセットアップを行います。まず適当なディレクトリを作成します。</p>
+
+<pre><code class="language-sh">$ mkdir vagrant
+$ mkdir vagrant/CentOS65
+$ cd vagrant/CentOS65
+</code></pre>
+
+<p>次にCentOS6.5のBoxをインストールします。<br />
+Boxの一覧は、<a href="http://www.vagrantbox.es/">http://www.vagrantbox.es/</a> にあります。こちらも結構時間かかります。</p>
+
+<pre><code class="language-sh">$ vagrant box add centos65 https://github.com/2creatives/vagrant-centos/releases/download/v6.5.3/centos65-x86_64-20140116.box
+==&gt; box: Box file was not detected as metadata. Adding it directly...
+==&gt; box: Adding box 'centos65' (v0) for provider:
+    box: Downloading: https://github.com/2creatives/vagrant-centos/releases/download/v6.5.3/centos65-x86_64-20140116.box
+==&gt; box: Successfully added box 'centos65' (v0) for 'virtualbox' !
+</code></pre>
+
+<h2 id="osの起動">OSの起動</h2>
+
+<p>CentOS6.5を起動します。<code>vagrant init</code>でVagrantの設定ファイルとなる<code>Vagrantfile</code>が生成されます。<code>vagran up</code>でOSの起動が行なわれます。</p>
+
+<pre><code class="language-sh">$ vagrant init centos65
+A `Vagrantfile` has been placed in this directory. You are now
+ready to `vagrant up` your first virtual environment! Please read
+the comments in the Vagrantfile as well as documentation on
+`vagrantup.com` for more information on using Vagrant.
+$ vagrant up
+Bringing machine 'default' up with 'virtualbox' provider...
+==&gt; default: Clearing any previously set forwarded ports...
+==&gt; default: Clearing any previously set network interfaces...
+==&gt; default: Preparing network interfaces based on configuration...
+    default: Adapter 1: nat
+==&gt; default: Forwarding ports...
+    default: 22 =&gt; 2222 (adapter 1)
+    default: /vagrant =&gt; /Users/enokawa/vagrant/CentOS65
+    .
+    .
+    .
+</code></pre>
+
+<p><code>vagrant ssh</code>で対象のホストにsshでログインすることができます。パッケージのアップデートをしておきます。</p>
+
+<pre><code>$ vagrant ssh
+[vagrant@vagrant-centos65 ~]$
+[vagrant@vagrant-centos65 ~]$ sudo yum update -y
+[vagrant@vagrant-centos65 ~]$ sudo reboot
+</code></pre>
+
+<h2 id="lampのインストール-起動">LAMPのインストール/起動</h2>
+
+<p>Apache、MySQL、PHPをインストールします。バージョンや設定などは省略しています。</p>
+
+<pre><code class="language-sh">[vagrant@vagrant-centos65 ~]$ sudo yum -y install httpd httpd-devel
+[vagrant@vagrant-centos65 ~]$ sudo yum -y install php php-mysql php-xml php-pear php-pdo php-cli php-mbstring php-gd php-mcrypt php-common php-devel php-bcmath
+[vagrant@vagrant-centos65 ~]$ sudo yum -y install mysql mysql-devel mysql-server
+[vagrant@vagrant-centos65 ~]$ sudo /etc/init.d/httpd start
+[vagrant@vagrant-centos65 ~]$ sudo chkconfig httpd on
+[vagrant@vagrant-centos65 ~]$ sudo /etc/init.d/mysqld start
+[vagrant@vagrant-centos65 ~]$ sudo chkconfig mysqld on
+</code></pre>
+
+<h2 id="mysql-serverの設定">mysql-serverの設定</h2>
+
+<p>WordPress用にデータベースの設定します。新しく<code>wordpress</code>ユーザーを作成します。</p>
+
+<pre><code class="language-sh">[vagrant@vagrant-centos65 ~]$ mysql -u root -p
+Enter password:&lt;空Enter&gt;
+mysql&gt; CREATE DATABASE wordpress;
+mysql&gt; grant all privileges on wordpress.* to wordpress@localhost identified by '任意のパスワード';
+mysql&gt; flush privileges;
+mysql&gt; quit;
+</code></pre>
+
+<h2 id="wordpressのインストール">WordPressのインストール</h2>
+
+<p>Mac上でWordPressを<a href="https://ja.wordpress.org/">公式ページ</a>からインストールして解凍します。今回は<code>/Users/enokawa/vagrant/CentOS65/wordpress</code>に展開したいと思います。
+<img src="/images/vagrant-on-macos3.png"></p>
+
+<p><img src="/images/vagrant-on-macos4.png"></p>
+
+<h2 id="ネットワークの設定-クライアントpcとディレクトリの同期">ネットワークの設定/クライアントPCとディレクトリの同期</h2>
+
+<p><code>Vagrantfile</code>を編集します。<br />
+以下の2行の下に</p>
+
+<pre><code class="language-sh"># config.vm.network &quot;private_network&quot;, ip: &quot;192.168.33.10&quot;
+# config.vm.synced_folder &quot;../data&quot;, &quot;/vagrant_data&quot;
+</code></pre>
+
+<p>以下の2行を追加します。<code>~/vagrant/CentOS65/wordpress</code>の箇所はお手持ちの環境に合わせて設定してください。</p>
+
+<pre><code class="language-sh">config.vm.network &quot;private_network&quot;, ip: &quot;192.168.33.10&quot;
+config.vm.synced_folder &quot;~/vagrant/CentOS65/wordpress&quot;, &quot;/var/www/html&quot;, owner: &quot;apache&quot;, group: &quot;apache&quot;
+</code></pre>
+
+<p>その後に<code>vagrant reload</code>で設定ファイルを再読み込みします。</p>
+
+<pre><code class="language-sh">$ vagrant reload
+</code></pre>
+
+<h2 id="ブラウザでアクセスしてみる">ブラウザでアクセスしてみる</h2>
+
+<p>Mac上のブラウザで <a href="http://192.168.33.10">http://192.168.33.10</a> にアクセスします。<br />
+おなじみの画面がでてきますので説明に従って進めていきます。
+<img src="/images/vagrant-on-macos5.png"></p>
+
+<p><img src="/images/vagrant-on-macos6.png"></p>
+
+<p><img src="/images/vagrant-on-macos7.png"></p>
+
+<p><img src="/images/vagrant-on-macos8.png">
+記事を投稿できました！</p>
+
+<h2 id="参考サイト">参考サイト</h2>
+
+<ul>
+<li>Vagrant日本語ドキュメント - <a href="http://blog.raqda.com/vagrant/index.html">http://blog.raqda.com/vagrant/index.html</a></li>
+</ul>
+
+      
+      
+      
+    </article>
+    
+ <aside><div id="disqus_thread"></div></aside>
+
+<script type="text/javascript">
+     
+    var disqus_shortname = 'blog-enokawa-co';
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+
+
+
+  </main>
+  
+  <nav class="pagination-single">
+    
+      <span class="previous">&larr; <a href="http://blog.enokawa.co/2015/09/01/aws-codedeploy/" rel="prev">AWS CodeDeployを使ってでデプロイを自動化してみた</a></span>
+    
+    
+      <span class="next"><a href="http://blog.enokawa.co/2016/05/14/opsworks-codecommit/" rel="next">OpsWorks &#43; CodeCommitでEC2をプロビジョニングする</a> &rarr;</span>
+    
+  </nav>
+
+
+  
+  <footer role="contentinfo">
+    <div style="text-align:center;">
+      <img src="/images/profile.png" width="64" height="64"><br>
+      Written by Naoto Enokawa
+    </div>
+  </footer>
+
+
+</div>
+
+<script src="/js/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script>
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-64780065-1', 'auto');
+	ga('send', 'pageview');
+</script>
+
+</body>
+</html>
+

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Mysql on あしたから本気だす</title>
+    <link>http://blog.enokawa.co/tags/mysql/</link>
+    <description>Recent content in Mysql on あしたから本気だす</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>ja-jp</language>
+    <lastBuildDate>Wed, 19 Oct 2016 15:03:24 +0900</lastBuildDate>
+    
+	<atom:link href="http://blog.enokawa.co/tags/mysql/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>CentOS7にマイナーバージョンのMySQLをyumでインストールしたい</title>
+      <link>http://blog.enokawa.co/2016/10/19/yum-install-minor-version-mysql-in-centos/</link>
+      <pubDate>Wed, 19 Oct 2016 15:03:24 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2016/10/19/yum-install-minor-version-mysql-in-centos/</guid>
+      <description>はじめに こんにちは、えのかわです。
+CentOSにMySQL5.7.11をyumでインストールしたい場面がありました。
+今日（2016/10/19）時点では、最新版は5.7.16です。
+rpmからインストールしようするとpostfixとmariadb-libsのコンフリクトが発生します。
+CentOS7 で MySQL と postfix を使いたいときの注意点
+MySQLレポジトリのインストール まず始めにMySQLレポのインストールです。
+$ sudo yum install http://dev.mysql.com/get/mysql57-community-release-el7-7.noarch.rpm . . ===================================================================================================================================================================================================================== Package Arch Version Repository Size ===================================================================================================================================================================================================================== Installing: mysql57-community-release noarch el7-7 /mysql57-community-release-el7-7.noarch 7.8 k Transaction Summary ===================================================================================================================================================================================================================== Install 1 Package . . $ cat /etc/yum.repos.d/mysql-community.repo [mysql-connectors-community] name=MySQL Connectors Community baseurl=http://repo.mysql.com/yum/mysql-connectors-community/el/7/$basearch/ enabled=1 gpgcheck=1 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-mysql [mysql-tools-community] name=MySQL Tools Community baseurl=http://repo.mysql.com/yum/mysql-tools-community/el/7/$basearch/ enabled=1 gpgcheck=1 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-mysql # Enable to use MySQL 5.5 [mysql55-community] name=MySQL 5.</description>
+    </item>
+    
+  </channel>
+</rss>

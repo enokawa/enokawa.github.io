@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Github on あしたから本気だす</title>
+    <link>http://blog.enokawa.co/tags/github/</link>
+    <description>Recent content in Github on あしたから本気だす</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>ja-jp</language>
+    <lastBuildDate>Mon, 06 Jan 2014 02:07:57 +0900</lastBuildDate>
+    
+	<atom:link href="http://blog.enokawa.co/tags/github/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>【備忘録】githubへのコミット</title>
+      <link>http://blog.enokawa.co/2014/01/06/commit-to-github/</link>
+      <pubDate>Mon, 06 Jan 2014 02:07:57 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2014/01/06/commit-to-github/</guid>
+      <description>gitのローカルリポジトリからgithubへのコミット方法
+環境 MacBook Pro 13inch (Mid 2012) OS X 10.8.5 iTerm2
+まずローカルディレクトリに移動
+cd git/hoge/
+git 開始
+git init
+フォルダ以下全部追加
+git add *
+ローカルにコミット
+git commit -m &#39;first commit&#39;
+リモートレポジトリ originを追加
+git remote add origin https://github.com/user/hoge.git
+githubにpush
+git push origin master
+参考にしたサイト
+goryugo Hatena Diary
+http://d.hatena.ne.jp/goryugo/20081026/1225007428</description>
+    </item>
+    
+  </channel>
+</rss>

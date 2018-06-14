@@ -1,0 +1,163 @@
+
+<!DOCTYPE html>
+<html lang="ja-jp">
+<head>
+
+  
+  <meta charset="UTF-8">
+  <title>
+    fallocateでswapを作成する | あしたから本気だす
+  </title>
+
+
+  
+  <meta name="viewport" content="width=device-width,user-scalable=no,maximum-scale=1,initial-scale=1">
+
+  
+  <link rel="canonical" href="http://blog.enokawa.co/2016/09/14/create-swap-from-fallocate/"/>
+
+  
+  <link rel="stylesheet" href="/css/sanitize.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+  <link rel="stylesheet" href="/css/highlight_monokai.css">
+  <link rel="stylesheet" href="/css/theme.css">
+  <link rel="stylesheet" href="/css/custom.css">
+  
+  
+  <link href="http://blog.enokawa.co/index.xml" rel="alternate" type="application/rss+xml" title="あしたから本気だす" />
+  <link href="http://blog.enokawa.co/index.xml" rel="feed" type="application/rss+xml" title="あしたから本気だす" />
+
+  
+  
+
+
+</head>
+
+
+
+<body>
+<div class="container">
+
+  
+  <header role="banner">
+    <div class="row gutters">
+      <div id="site-title" class="col span_6">
+        <h1><a href="http://blog.enokawa.co/">あしたから本気だす</a></h1>
+        
+      </div>
+      <div id="social" class="col span_6">
+        <ul>
+          <li><a href="https://twitter.com/enkw_" target="_blank">Twitter</a></li>
+          <li><a href="https://facebook.com/naoto.enokawa" target="_blank">Facebook</a></li>
+          <li><a href="https://github.com/enokawa" target="_blank">GitHub</a></li>
+          
+        </ul>
+      </div>
+    </div>
+  </header>
+
+
+  
+  <main id="single" role="main">
+    <div class="article-header">
+      <h1>fallocateでswapを作成する</h1>
+      <div class="meta">
+        Sep 14, 2016 &nbsp;
+        
+          #<a href="/tags/linux">linux</a>&nbsp;
+        
+      </div>
+    </div>
+    <article>
+      
+
+<h2 id="はじめに">はじめに</h2>
+
+<p>こんにちは、<a href="https://twitter.com/enkw_">えのかわ</a>です。<br />
+fallocateでswapを作成する手順を残しておきます。OSはAmazonLinuxです。</p>
+
+<h2 id="ざっくり">ざっくり</h2>
+
+<p>3GB分のswapを作成します。</p>
+
+<pre><code>[root@test-01 ~]# mkdir /var/lib/swap
+[root@test-01 ~]# cd /var/lib/swap/  
+[root@test-01 swap]# fallocate -l 3g swapfile.0
+[root@test-01 swap]# mkswap ./swapfile.0
+Setting up swapspace version 1, size = 3145724 KiB
+no label, UUID=c7a98a35-47a1-41dc-ac86-05ad1910f4ca
+[root@test-01 swap]# chmod 600 swapfile.0
+[root@test-01 swap]# swapon swapfile.0
+[root@test-01 swap]# free -m | grep Swap
+Swap:         3071          0       3071
+[root@test-01 swap]# vim /etc/fstab
+/var/lib/swap/swapfile.0 swap       swap defaults 0  0
+[root@test-01 swap]# cat /proc/sys/vm/swappiness
+60
+</code></pre>
+
+<h2 id="さいごに">さいごに</h2>
+
+<p>以下の記事が参考になりました。<br />
+<a href="http://qiita.com/unosk/items/984b336a292fc1dcf03c">Azure仮想マシンへのSwap領域の割り当て</a></p>
+
+      
+      
+      
+    </article>
+    
+ <aside><div id="disqus_thread"></div></aside>
+
+<script type="text/javascript">
+     
+    var disqus_shortname = 'blog-enokawa-co';
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+
+
+
+  </main>
+  
+  <nav class="pagination-single">
+    
+      <span class="previous">&larr; <a href="http://blog.enokawa.co/2016/09/07/specific-route53-hostedzone-change/" rel="prev">特定のRoute53のHostedZoneのみの操作権限を与えたい</a></span>
+    
+    
+      <span class="next"><a href="http://blog.enokawa.co/2016/10/06/describe-rds-db-engine-versions/" rel="next">RDSのDB Engineのバージョン一覧をAWS CLIで確認する</a> &rarr;</span>
+    
+  </nav>
+
+
+  
+  <footer role="contentinfo">
+    <div style="text-align:center;">
+      <img src="/images/profile.png" width="64" height="64"><br>
+      Written by Naoto Enokawa
+    </div>
+  </footer>
+
+
+</div>
+
+<script src="/js/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script>
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-64780065-1', 'auto');
+	ga('send', 'pageview');
+</script>
+
+</body>
+</html>
+

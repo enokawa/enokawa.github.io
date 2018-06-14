@@ -1,0 +1,216 @@
+
+<!DOCTYPE html>
+<html lang="ja-jp">
+<head>
+
+  
+  <meta charset="UTF-8">
+  <title>
+    DevOps採用システム自動構築ツール「SkyHopper」を使ってみた | あしたから本気だす
+  </title>
+
+
+  
+  <meta name="viewport" content="width=device-width,user-scalable=no,maximum-scale=1,initial-scale=1">
+
+  
+  <link rel="canonical" href="http://blog.enokawa.co/2015/08/09/skyhopper/"/>
+
+  
+  <link rel="stylesheet" href="/css/sanitize.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+  <link rel="stylesheet" href="/css/highlight_monokai.css">
+  <link rel="stylesheet" href="/css/theme.css">
+  <link rel="stylesheet" href="/css/custom.css">
+  
+  
+  <link href="http://blog.enokawa.co/index.xml" rel="alternate" type="application/rss+xml" title="あしたから本気だす" />
+  <link href="http://blog.enokawa.co/index.xml" rel="feed" type="application/rss+xml" title="あしたから本気だす" />
+
+  
+  
+
+
+</head>
+
+
+
+<body>
+<div class="container">
+
+  
+  <header role="banner">
+    <div class="row gutters">
+      <div id="site-title" class="col span_6">
+        <h1><a href="http://blog.enokawa.co/">あしたから本気だす</a></h1>
+        
+      </div>
+      <div id="social" class="col span_6">
+        <ul>
+          <li><a href="https://twitter.com/enkw_" target="_blank">Twitter</a></li>
+          <li><a href="https://facebook.com/naoto.enokawa" target="_blank">Facebook</a></li>
+          <li><a href="https://github.com/enokawa" target="_blank">GitHub</a></li>
+          
+        </ul>
+      </div>
+    </div>
+  </header>
+
+
+  
+  <main id="single" role="main">
+    <div class="article-header">
+      <h1>DevOps採用システム自動構築ツール「SkyHopper」を使ってみた</h1>
+      <div class="meta">
+        Aug 9, 2015 &nbsp;
+        
+          #<a href="/tags/skyhopper">skyhopper</a>&nbsp;
+        
+          #<a href="/tags/aws">aws</a>&nbsp;
+        
+      </div>
+    </div>
+    <article>
+      
+
+<h2 id="はじめに">はじめに</h2>
+
+<p>こんにちは、インフラエンジニア見習いの<a href="https://twitter.com/enkw_">えのかわ</a>です。<br />
+今回は<a href="http://www.skyarch.net/">株式会社スカイアーチネットワークス</a>が開発したDevOps採用システム自動構築ツール「<a href="http://www.skyarch.net/blog/?p=2709">SkyHopper</a>」を使ってみましたのでそのレポートを書きたいと思います。</p>
+
+<p>今回はAmazon Linuxのt2.microを用いて構築します。
+ゴールとしては、SkyHopperを利用してELB+EC2+RDSのよく見る構成を構築します。
+<img src="/images/skyhopper.png"></p>
+
+<h2 id="skyhopperとは">SkyHopperとは</h2>
+
+<p>ひと言でいうと、「ブラウザでAWSの構築ができてchefやServerspecが流せて監視ができるもの」ですかね。長いですね。笑</p>
+
+<h2 id="skyhopperのインストール">SkyHopperのインストール</h2>
+
+<p>基本的には<a href="https://github.com/skyarch-networks/skyhopper/blob/master/doc/installation/skyhopper.md">デプロイ手順</a>を順番に進めていけば構築できます。
+<a href="https://github.com/skyarch-networks/skyhopper_cookbooks/tree/master/cookbooks/skyhopper">Cookbook</a>も用意されているのでChefに慣れている方はChefで構築した方が楽かもしれません。</p>
+
+<h2 id="セットアップ">セットアップ</h2>
+
+<p>以下の図のように設定します。
+<img src="/images/skyhopper1.png"></p>
+
+<p>構築が完了したら以下のコマンドを打ってskyhopperを再起動します。</p>
+
+<pre><code class="language-sh">$ cp -r ~/skyhopper/tmp/chef ~/.chef
+$ ./scripts/skyhopper_daemon.sh stop
+$ ./scripts/skyhopper_daemon.sh start
+</code></pre>
+
+<p>自動的に2台のインスタンスが構築されます。おそらくChefサーバーとZabbixサーバーです。EIPも関連付けられます。
+<img src="/images/skyhopper2.png"></p>
+
+<h2 id="サインアップ">サインアップ</h2>
+
+<p>サインアップします。<code>master</code>と<code>admin</code>の意味はまだ分かってないです。分かり次第、更新したいと思います。
+<img src="/images/skyhopper3.png"></p>
+
+<h2 id="顧客の作成">顧客の作成</h2>
+
+<p>えのかわ株式会社から受注しました。顧客コードの決め方は規約を設けた方がいいと思いました。
+<img src="/images/skyhopper4.png"></p>
+
+<h2 id="案件の作成">案件の作成</h2>
+
+<p>えのかわ株式会社から公式HP作成の依頼が来たので新しく案件を作成します。アクセスキーとシークレットアクセスキーはお客様から頂きました。
+<img src="/images/skyhopper5.png"></p>
+
+<h2 id="新規インフラの作成">新規インフラの作成</h2>
+
+<p>新しくインフラを構築します。EC2インスタンスも構築するので新しくキーペアーも登録します。新しく作成することもできます。
+<img src="/images/skyhopper6.png"></p>
+
+<h2 id="スタックの詳細-1">スタックの詳細（1）</h2>
+
+<p>あらかじめ用意されているCloudFormationのテンプレートを用います。僕はWordPressのAMIを作成して、テンプレートにAMIを指定しました。
+<img src="/images/skyhopper7.png"></p>
+
+<h2 id="スタックの詳細-2">スタックの詳細（2）</h2>
+
+<p>インスタンスタイプやDBの設定をすることができます。「送信」ボタンを押すと、CloudFormationのスタックが実行されます。
+<img src="/images/skyhopper8.png"></p>
+
+<h2 id="ブラウザでアクセスしてみる">ブラウザでアクセスしてみる</h2>
+
+<p>ELBのDNSでアクセスしてみます。お決まりのWordPressのセットアップ画面が表示されます。「データベースホスト」欄にRDSのDNS Nameを入力すれば完了です。2台のEC2のアクセスログをtailして負荷分散されることを確認します。
+<img src="/images/skyhopper9.png"></p>
+
+<h2 id="ハマったところ">ハマったところ</h2>
+
+<ul>
+<li>鍵ペア名に<code>.pem</code>をいれて<code>stack creation failed</code>エラー</li>
+<li>Default VPCが存在していなくてエラー</li>
+</ul>
+
+<h2 id="気になったところ">気になったところ</h2>
+
+<ul>
+<li>ログにACCESSKEYとかSECRETACCESSKEYとか秘密鍵を吐いてるので気をつける必要があると思いました。<br /></li>
+</ul>
+
+      
+      
+      
+    </article>
+    
+ <aside><div id="disqus_thread"></div></aside>
+
+<script type="text/javascript">
+     
+    var disqus_shortname = 'blog-enokawa-co';
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+
+
+
+  </main>
+  
+  <nav class="pagination-single">
+    
+      <span class="previous">&larr; <a href="http://blog.enokawa.co/2015/07/29/nagios-check-cloudwatch/" rel="prev">NagiosのCloudWatchプラグインをつくってみた(PHP)</a></span>
+    
+    
+      <span class="next"><a href="http://blog.enokawa.co/2015/09/01/aws-codedeploy/" rel="next">AWS CodeDeployを使ってでデプロイを自動化してみた</a> &rarr;</span>
+    
+  </nav>
+
+
+  
+  <footer role="contentinfo">
+    <div style="text-align:center;">
+      <img src="/images/profile.png" width="64" height="64"><br>
+      Written by Naoto Enokawa
+    </div>
+  </footer>
+
+
+</div>
+
+<script src="/js/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script>
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-64780065-1', 'auto');
+	ga('send', 'pageview');
+</script>
+
+</body>
+</html>
+

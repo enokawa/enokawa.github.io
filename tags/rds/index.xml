@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Rds on あしたから本気だす</title>
+    <link>http://blog.enokawa.co/tags/rds/</link>
+    <description>Recent content in Rds on あしたから本気だす</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>ja-jp</language>
+    <lastBuildDate>Thu, 06 Oct 2016 17:14:37 +0900</lastBuildDate>
+    
+	<atom:link href="http://blog.enokawa.co/tags/rds/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>RDSのDB Engineのバージョン一覧をAWS CLIで確認する</title>
+      <link>http://blog.enokawa.co/2016/10/06/describe-rds-db-engine-versions/</link>
+      <pubDate>Thu, 06 Oct 2016 17:14:37 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2016/10/06/describe-rds-db-engine-versions/</guid>
+      <description>はじめに こんにちは、えのかわです。
+RDSのDB Engineのバージョン一覧をAWS CLI一発で確認する方法のメモです。
+さっそく MySQLのバージョン一覧を確認してみます。
+$ aws rds describe-db-engine-versions --engine mysql --query &#39;DBEngineVersions[].EngineVersion&#39; --output table -------------------------- |DescribeDBEngineVersions| +------------------------+ | 5.5.40 | | 5.5.40a | | 5.5.40b | | 5.5.41 | | 5.5.42 | | 5.5.46 | | 5.6.19a | | 5.6.19b | | 5.6.21 | | 5.6.21b | | 5.6.22 | | 5.6.23 | | 5.6.27 | | 5.6.29 | | 5.7.10 | | 5.7.11 | +------------------------+  Auroraの場合 Auroraの場合は単純に--engineパラメータを修正するのみです。</description>
+    </item>
+    
+  </channel>
+</rss>

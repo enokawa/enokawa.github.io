@@ -1,0 +1,672 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Posts on あしたから本気だす</title>
+    <link>http://blog.enokawa.co/post/</link>
+    <description>Recent content in Posts on あしたから本気だす</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>ja-jp</language>
+    <lastBuildDate>Thu, 14 Jun 2018 12:15:49 +0900</lastBuildDate>
+    
+	<atom:link href="http://blog.enokawa.co/post/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>EFSをVPCペアリング経由でマウントする</title>
+      <link>http://blog.enokawa.co/2018/06/14/mount-efs-via-vpc-peering/</link>
+      <pubDate>Thu, 14 Jun 2018 12:15:49 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2018/06/14/mount-efs-via-vpc-peering/</guid>
+      <description>はじめに こんにちはえのかわです。前回は単純に autofs で EFS をマウントしましたが、今回は VPC Peering経由でマウントしてみたいと思います。
+AWS のドキュメントには、VPN や VPC Peering 経由ではマウントできないとの記述があります。
+ AWS Direct Connect を使用して、オンプレミスのデータセンターサーバーから Amazon EFS ファイルシステムをマウントできます。ただし、VPN 接続や VPC ピア接続などの他の VPC プライベート接続機能はサポートされていません。
+ https://docs.aws.amazon.com/ja_jp/efs/latest/ug/limits.html
+クラメソさんの記事を参考にさせてもらいました。
+SSH ポートフォワーディングを使って EFS を Mac からマウントしてみた
+AWS リソース作成 こんな感じで作成しました。東京リージョンからオレゴンリージョンの EC2 を経由して EFS をマウントします。RouteTable や SecurityGroup の設定はお互い通信できるように事前に済ませておきましょう。 EC2設定(東京側) オレゴン側の設定は特に必要ありません。こういう感じで東京の EC2 からオレゴンの EC2 に SSH できるように設定しておきます。
+[ec2-user@ip-10-0-0-79 ~]$ ssh -i .ssh/enokawa-kensho-us-west-2.pem ec2-user@172.31.38.154 Last login: Thu Jun 14 03:40:07 2018 from 10.0.0.79 __| __|_ ) _| ( / Amazon Linux AMI ___|\___|___| https://aws.</description>
+    </item>
+    
+    <item>
+      <title>autofsでEFSをマウントする</title>
+      <link>http://blog.enokawa.co/2018/06/13/mount-efs-with-autofs/</link>
+      <pubDate>Wed, 13 Jun 2018 15:05:15 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2018/06/13/mount-efs-with-autofs/</guid>
+      <description>はじめに こんにちはえのかわです。EFS、東京リージョン対応がアナウンスされましたね。
+リリース前にちょいと検証してみます。単純にマウントするだけではつまらないので autofs でマウントしてみます。
+AWS リソース作成 こんな感じで作成しました。リージョンはオレゴンでやってます。OS は Amazon Linux です。 EC2設定 autofs をインストールしてマウントポイント用のディレクトリを作成します。
+[ec2-user@ip-172-31-38-110 ~]$ sudo yum install autofs [ec2-user@ip-172-31-38-110 ~]$ sudo mkdir /exports  続いて autofs の設定です。
+[ec2-user@ip-172-31-38-110 ~]$ sudo sh -c &amp;quot;echo &#39;/- /etc/auto.nfs --timeout=3&#39; &amp;gt;&amp;gt; /etc/auto.master&amp;quot; [ec2-user@ip-172-31-38-110 ~]$ cat /etc/auto.nfs /exports -nfsvers=4.1 us-west-2a.fs-xxxxxxxx.efs.us-west-2.amazonaws.com:/  autofs 起動します。
+[ec2-user@ip-172-31-38-110 ~]$ sudo /etc/init.d/autofs start Starting automount: [ OK ]  /exports ディレクトリに移動するとマウントされていることが確認できました。
+[ec2-user@ip-172-31-38-110 ~]$ df -h Filesystem Size Used Avail Use% Mounted on devtmpfs 484M 56K 484M 1% /dev tmpfs 494M 0 494M 0% /dev/shm /dev/xvda1 7.</description>
+    </item>
+    
+    <item>
+      <title>Serverless FrameworkでEC2を定期的に起動/停止するdawnを公開しました</title>
+      <link>http://blog.enokawa.co/2018/02/14/dawn/</link>
+      <pubDate>Wed, 14 Feb 2018 00:26:12 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2018/02/14/dawn/</guid>
+      <description>はじめに こんにちはえのかわです。タイトルの通り、EC2 を定期的に起動/停止するツール、名付けて dawn をリリースしました。
+enokawa/dawn: Lambda function to automaticaly stop and start the EC2 instance.
+dawn?? dawn とは 夜明け、明け方 という意味です。名付け親は id:iga-ninja さんです。どうも良い名前が決まらなくて決めてもらいました。発音は dän, dôn だそうです。どぁ〜ん。
+きっかけ 業務のなかで、よく EC2 を定期的に停止/起動するケースがあるので、どうせなら Serverless Framework でと思い作成しました。けっこうありきたりですが、EC2 の費用削減にもなりますし僕も利用者の一人です。
+また、dawn は EC2 の AMI をスケジュールで取得する y13i/amirotate を参考にして作成しました。amirotate に限らず、y13i さんのレポジトリはすごく参考になります。
+おわりに 今回は単純なスクリプトですが、今後もガンガン Serverless Framework 使っていきます。何か要望などあれば Pull Request いただけると僕が喜びます。</description>
+    </item>
+    
+    <item>
+      <title>GoogleAuthenticatorを利用してAmazon WorkSpacesへ多要素認証ログインする</title>
+      <link>http://blog.enokawa.co/2018/01/11/login-to-amazon-workspaces-with-google-authenticator/</link>
+      <pubDate>Thu, 11 Jan 2018 22:18:02 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2018/01/11/login-to-amazon-workspaces-with-google-authenticator/</guid>
+      <description>はじめに えのかわです。
+Amazon WorkSpaces に多用素認証ログインするのに詰まったのでエントリ書きます。
+構成 ざっくりとこんな感じです。現時点(2018/01/12)で Simple AD だと MFA を利用した上での WorkSpaces ログインができないので Microsoft AD を使用しています。 手順 VPC の作成とかは省きます。
+DirectoryServiceの作成 作成には 20 分 〜 30 分ほど掛かります。
+$ aws ds create-microsoft-ad \ --name ad.enokawa.co \ --password xxxxxxxxxxxxxx \ --vpc-settings VpcId=vpc-xxxxxxx,SubnetIds=subnet-xxxxxxx,subnet-xxxxxxx { &amp;quot;DirectoryId&amp;quot;: &amp;quot;d-xxxxxxxxx&amp;quot; }  Directory の Status が Active になったら Register します。(Register する API が見つけられなかったけどないのかな、、、
+WorkSpaceの作成 CLI で作成する場合は WorkSpace 用のユーザが DirectoryService に存在している必要があります。DirectoryService にユーザを作成する場合は少し面倒なので公式ドキュメントを参考にポチポチで作成します。
+お客様の Amazon WorkSpace ( Your Amazon WorkSpace ) という件名でメールが AWS 側から送信されるので、メール本文に記載されている手順通りに進めます。専用のクライアントでログインを試みると、ユーザ名とパスワードが表示されます。これで普通にログインできます。 RADIUSインスタンスの設定 gist はります。hostnamectl コマンドでホスト名を設定しておいてください。</description>
+    </item>
+    
+    <item>
+      <title>【re:Invent2017レポート】NetflixはパフォーマンスのためにどのようにEC2をチューニングしているか</title>
+      <link>http://blog.enokawa.co/2017/11/29/how-netflix-tunes-amazon-ec2-instances-for-performance/</link>
+      <pubDate>Wed, 29 Nov 2017 18:09:58 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2017/11/29/how-netflix-tunes-amazon-ec2-instances-for-performance/</guid>
+      <description>はじめに こんにちはえのかわです。下記のセッションレポートです。
+CMP325 - How Netflix Tunes Amazon EC2 Instances for Performance
+ インスタンスタイプの選定  Netflix の AWS 環境  AutoScalingを採用  30 ものインスタンスタイプを使い分けている  ファミリーは m4 / c5 / i3, d2 / r4, x1 / p2, g3, f1 medium から 16xlarge(以上) まで  インスタンス選択のフローチャート    全てのインスタンスタイプでロードテスト(スループット計測)を行っている  EC2 インスタンスの費用についても計測し、効率の良いインスタンスタイプを選定する インスタンス選定用のツールも自前で作成している    カーネルチューニング  Netflix では Ubuntu Linux を利用している  基本的なパフォーマンスチューニングを施しているベースの AMI を持っている  CPU スケジュール  # schedtool -B PID  仮想メモリ  vm.</description>
+    </item>
+    
+    <item>
+      <title>【re:Invent2017レポート】ExpediaにおけるAmazonElasticsearchServiceを用いたログ解析</title>
+      <link>http://blog.enokawa.co/2017/11/28/log-analytics-at-expedia-using-amazon-elasticsearch-service/</link>
+      <pubDate>Tue, 28 Nov 2017 07:17:52 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2017/11/28/log-analytics-at-expedia-using-amazon-elasticsearch-service/</guid>
+      <description>はじめに こんにちはえのかわです。下記のセッションレポートです。
+ABD331 - Log Analytics at Expedia Using Amazon Elasticsearch Service
+ Amazon Elasticsearch Service について まず AWS の Principal Product Manager である Carl Meadows 氏から簡単に Elasticsearch と Amazon Elasticsearch Service(以下ES)についての説明がありました。
+現在、機械的に生成されたデータは多い  手動による IT から DevOps への移行 IoT デバイス クラウドベースのアーキテクチャ  Elasticsearch のベネフィット  オープンソース 素早い価値創出  ELK Stack とは下記の 3 つをまとめたもの  Elasticsearch Logstash Kibana  Elasticsearch のユースケース  アプリケーションモニタリング と Root-cause Analysis(根本原因解析) Security Information and Event Management(SIEM) IoT &amp;amp; モバイル ビジネス &amp;amp; クリックストリーム分析  ES について  マネージド Elasticsearch + Kibana ベネフィット  オープンソース 簡単 スケーラブル セキュア 高可用性 他 AWS サービスとの連携   事例  Adobe Netflix など  Expedia における ES のユースケース Expedia の Kuldeep Chowhan(@this_is_kuldeep) 氏から Expedia のユースケースについて発表がありました。</description>
+    </item>
+    
+    <item>
+      <title>CloudFront&#43;S3で構成する静的ウェブサイトホスティングのベストプラクティス</title>
+      <link>http://blog.enokawa.co/2017/10/13/best-practice-for-static-web-site-hosting-with-cloudfront-and-s3/</link>
+      <pubDate>Fri, 13 Oct 2017 23:08:58 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2017/10/13/best-practice-for-static-web-site-hosting-with-cloudfront-and-s3/</guid>
+      <description>はじめに えのかわです。
+よくある、CloudFrnt + S3 を用いた静的ウェブサイトホスティングの、ベストプラクティスをログとして残します。（よく説明することがあるので、、）
+構成 S3 を CloudFront Origin として登録する際に、2 つの方法があると思っています。
+ S3 Origin Custom Origin(Static website hostingのURLで)  しかし2つの方法にはメリットデメリットがあります。
+ S3 Origin  メリット: OAIによるS3への直接アクセスを防ぐことが可能 デメリット: ディレクトリを掘ったパスにアクセスした際にindex.htmlがロードされない  Custom Origin  メリット: ディレクトリを掘ったパスにアクセスした際にindex.htmlがロードされる デメリット: S3 へ直接アクセスできてしまう   本題 Cloud Front の Origin として、Custom Origin で登録する方法で進めます。該当の S3 は Static website hosting を有効化します。 その上で S3 のバケットポリシー側で UserAgent 値が Amazon CloudFront であった場合にコンテンツを返すように記載します。
+{ &amp;quot;Version&amp;quot;: &amp;quot;2008-10-17&amp;quot;, &amp;quot;Statement&amp;quot;: [ { &amp;quot;Sid&amp;quot;: &amp;quot;AllowFromCloudFront&amp;quot;, &amp;quot;Effect&amp;quot;: &amp;quot;Allow&amp;quot;, &amp;quot;Principal&amp;quot;: &amp;quot;*&amp;quot;, &amp;quot;Action&amp;quot;: &amp;quot;s3:GetObject&amp;quot;, &amp;quot;Resource&amp;quot;: &amp;quot;arn:aws:s3:::example.</description>
+    </item>
+    
+    <item>
+      <title>AutoScalingからCloudWatchEvents(Lambda)を呼ぶ</title>
+      <link>http://blog.enokawa.co/2017/04/23/use-auto-scaling-lifecycle-hook-with-cloudwatch-events-lambda/</link>
+      <pubDate>Sun, 23 Apr 2017 16:02:58 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2017/04/23/use-auto-scaling-lifecycle-hook-with-cloudwatch-events-lambda/</guid>
+      <description>はじめに ご無沙汰してます、えのかわです。先日投稿したエントリの続きです。
+今回は、Auto Scaling の Lifecycle Hooks の TERMINATING をトリガーに、CloudWatch Events から Lambda Function をキックして、SSM Run Commandを呼んでみます。
+ゴールはログを S3 に転送することとします。
+AutoScaling設定 前回のエントリと同様の AWS CLI を流します。
+Scaling Policies、Lifecycle hook の作成も併せて行います。
+Lambda Function作成 今回はせっかくなので Serverless Framework を用いて Lambda Function を作成します。 
+CloudWatch Events作成 CloudWatch Events の設定も Serverless Framework で行いたかったのですが何故か上手くいかず、、、しょうがなく GUI で設定しました。 ドキュメントはこちらです。
+AutoScaling実施 今回は Scale In Event のみ Execute します。
+Terminating -&amp;gt; Terminating:Wait -&amp;gt; Terminating:Proceed -&amp;gt; Terminated の順番でサービスアウトしました。 s3 の中身を見てみると、、、
+sls-autoscaling % aws s3 ls s3://enokawa-logs/ PRE i-xxxxxxxxxxxxxx1/ PRE i-xxxxxxxxxxxxxx2/  問題なくスケールインされたインスタンスのログのみ転送されてました。</description>
+    </item>
+    
+    <item>
+      <title>AutoScalingからCloudWatchEvents(SSM)を呼ぶ</title>
+      <link>http://blog.enokawa.co/2017/03/23/use-auto-scaling-lifecycle-hook-with-cloudwatch-events-ssm/</link>
+      <pubDate>Thu, 23 Mar 2017 14:17:24 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2017/03/23/use-auto-scaling-lifecycle-hook-with-cloudwatch-events-ssm/</guid>
+      <description>はじめに ご無沙汰してます、えのかわです。
+先日、CloudWatch Events の Target に SSM Run Command が追加されました。
+今回は、Auto Scaling の Lifecycle Hooks の TERMINATING をトリガーに、CloudWatch Events から SSM Run Commnad を呼んでみます。LAUNCHING に関しては、特に SSM を呼ぶ必要がなさそうなので、 User data を用いて初期設定を行います。
+AutoScaling設定 ざっと aws cli を流します。
+Launch Configuration作成 ベースとなる AMI には SSM Agent を導入している必要があります。今回の OS は AmazonLinux です。
+$ aws autoscaling create-launch-configuration \ --launch-configuration-name test-web-lc \ --image-id ami-xxxxxx \ --key-name enokawa-kensho \ --security-groups sg-xxxxxxxx sg-xxxxxxxx \ --user-data file://userdata.txt \ --instance-type t2.</description>
+    </item>
+    
+    <item>
+      <title>【pcs】特定リソースのmigration-thresholdを変更する</title>
+      <link>http://blog.enokawa.co/2016/10/27/set-specific-resource-the-migration-threshold-of-pcs/</link>
+      <pubDate>Thu, 27 Oct 2016 17:59:37 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2016/10/27/set-specific-resource-the-migration-threshold-of-pcs/</guid>
+      <description>はじめに こんにちは、えのかわです。
+Pacemaker/Corosyncで、特定リソースのmigration-thresholdを変更してみたのでメモです。
+基本的にはRed Hatのドキュメントを読めば理解できると思います。
+Red Hat Enterprise Linux 6 Pacemaker を使用した Red Hat High Availability Add-On の設定
+pcsのバージョンは下記。AmazonLinuxです。
+$ pcs --version 0.9.141  ざっくり 全体のmigration-thresholdは1で設定しています。
+今回はapacheリソースのみ2に変更してみます。
+$ sudo pcs resource defaults resource-stickiness: INFINITY migration-threshold: 1  migration-thresholdの変更
+$ sudo pcs resource meta apache migration-threshold=2  migration-thresholdの確認
+$ sudo pcs resource show apache Resource: apache (class=lsb type=apache) Meta Attrs: migration-threshold=2 Operations: start on-fail=restart interval=0s timeout=20s (apache-start-interval-0s) monitor on-fail=restart interval=60s timeout=60s (apache-monitor-interval-60s) stop on-fail=fence interval=0s timeout=20s (apache-stop-interval-0s)  migration-thresholdを2以上に変更した場合、failure-timeoutの変更も併せて必要になります。</description>
+    </item>
+    
+    <item>
+      <title>AWS CodeCommitのアクティブユーザについて</title>
+      <link>http://blog.enokawa.co/2016/10/20/about-the-aws-codecommit-active-user/</link>
+      <pubDate>Thu, 20 Oct 2016 13:05:13 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2016/10/20/about-the-aws-codecommit-active-user/</guid>
+      <description>はじめに こんにちは、えのかわです。
+CodeCommitのアクティブユーザの定義について意味を理解していなかったので懺悔します。
+甘かった僕の認識 最初の 5 人のアクティブユーザー*は無料」という表示で、「あっ、5つのIAMユーザまでは無料なんだ」と勘違いしていました。 しかし実際のドキュメントの内容は下記で、完璧に意味を履き違えていました。
+  アクティブユーザーとは、その月に Git リクエストまたは AWS マネジメントコンソールを使用して AWS CodeCommit リポジトリにアクセスする、すべての固有の AWS Identity (IAM ユーザー、IAM ロール、フェデレーティッドユーザー、ルートアカウント) を指します。一意の AWS アイデンティティを使用して CodeCommit にアクセスするサーバーは、アクティブなユーザーとみなされます。その月に AWS CodeCommit にアクセスしていないユーザーに対しては料金が発生しません。ストレージには、リポジトリのデータを保持するために必要な容量全体が含まれます。   料金 - Amazon CodeCommit | AWS https://aws.amazon.com/jp/codecommit/pricing/
+ということは 例えば5つのクライアントPCで同じIAMユーザ(SSH Key ID)を利用(Pull or Push)した場合、5アクティブユーザとしてみなされます。 僕の場合、1台のクライアントPCでPushやPullを行い、6台のEC2でpullのみを行いました。その結果additional CodeCommit user: 2 User-Monthとしてみなされました。
+さいごに AWSのドキュメントはちゃんと読もうな、オレ。</description>
+    </item>
+    
+    <item>
+      <title>CentOS7にマイナーバージョンのMySQLをyumでインストールしたい</title>
+      <link>http://blog.enokawa.co/2016/10/19/yum-install-minor-version-mysql-in-centos/</link>
+      <pubDate>Wed, 19 Oct 2016 15:03:24 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2016/10/19/yum-install-minor-version-mysql-in-centos/</guid>
+      <description>はじめに こんにちは、えのかわです。
+CentOSにMySQL5.7.11をyumでインストールしたい場面がありました。
+今日（2016/10/19）時点では、最新版は5.7.16です。
+rpmからインストールしようするとpostfixとmariadb-libsのコンフリクトが発生します。
+CentOS7 で MySQL と postfix を使いたいときの注意点
+MySQLレポジトリのインストール まず始めにMySQLレポのインストールです。
+$ sudo yum install http://dev.mysql.com/get/mysql57-community-release-el7-7.noarch.rpm . . ===================================================================================================================================================================================================================== Package Arch Version Repository Size ===================================================================================================================================================================================================================== Installing: mysql57-community-release noarch el7-7 /mysql57-community-release-el7-7.noarch 7.8 k Transaction Summary ===================================================================================================================================================================================================================== Install 1 Package . . $ cat /etc/yum.repos.d/mysql-community.repo [mysql-connectors-community] name=MySQL Connectors Community baseurl=http://repo.mysql.com/yum/mysql-connectors-community/el/7/$basearch/ enabled=1 gpgcheck=1 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-mysql [mysql-tools-community] name=MySQL Tools Community baseurl=http://repo.mysql.com/yum/mysql-tools-community/el/7/$basearch/ enabled=1 gpgcheck=1 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-mysql # Enable to use MySQL 5.5 [mysql55-community] name=MySQL 5.</description>
+    </item>
+    
+    <item>
+      <title>RDSのDB Engineのバージョン一覧をAWS CLIで確認する</title>
+      <link>http://blog.enokawa.co/2016/10/06/describe-rds-db-engine-versions/</link>
+      <pubDate>Thu, 06 Oct 2016 17:14:37 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2016/10/06/describe-rds-db-engine-versions/</guid>
+      <description>はじめに こんにちは、えのかわです。
+RDSのDB Engineのバージョン一覧をAWS CLI一発で確認する方法のメモです。
+さっそく MySQLのバージョン一覧を確認してみます。
+$ aws rds describe-db-engine-versions --engine mysql --query &#39;DBEngineVersions[].EngineVersion&#39; --output table -------------------------- |DescribeDBEngineVersions| +------------------------+ | 5.5.40 | | 5.5.40a | | 5.5.40b | | 5.5.41 | | 5.5.42 | | 5.5.46 | | 5.6.19a | | 5.6.19b | | 5.6.21 | | 5.6.21b | | 5.6.22 | | 5.6.23 | | 5.6.27 | | 5.6.29 | | 5.7.10 | | 5.7.11 | +------------------------+  Auroraの場合 Auroraの場合は単純に--engineパラメータを修正するのみです。</description>
+    </item>
+    
+    <item>
+      <title>fallocateでswapを作成する</title>
+      <link>http://blog.enokawa.co/2016/09/14/create-swap-from-fallocate/</link>
+      <pubDate>Wed, 14 Sep 2016 21:46:09 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2016/09/14/create-swap-from-fallocate/</guid>
+      <description>はじめに こんにちは、えのかわです。
+fallocateでswapを作成する手順を残しておきます。OSはAmazonLinuxです。
+ざっくり 3GB分のswapを作成します。
+[root@test-01 ~]# mkdir /var/lib/swap [root@test-01 ~]# cd /var/lib/swap/ [root@test-01 swap]# fallocate -l 3g swapfile.0 [root@test-01 swap]# mkswap ./swapfile.0 Setting up swapspace version 1, size = 3145724 KiB no label, UUID=c7a98a35-47a1-41dc-ac86-05ad1910f4ca [root@test-01 swap]# chmod 600 swapfile.0 [root@test-01 swap]# swapon swapfile.0 [root@test-01 swap]# free -m | grep Swap Swap: 3071 0 3071 [root@test-01 swap]# vim /etc/fstab /var/lib/swap/swapfile.0 swap swap defaults 0 0 [root@test-01 swap]# cat /proc/sys/vm/swappiness 60  さいごに 以下の記事が参考になりました。</description>
+    </item>
+    
+    <item>
+      <title>特定のRoute53のHostedZoneのみの操作権限を与えたい</title>
+      <link>http://blog.enokawa.co/2016/09/07/specific-route53-hostedzone-change/</link>
+      <pubDate>Wed, 07 Sep 2016 21:00:37 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2016/09/07/specific-route53-hostedzone-change/</guid>
+      <description>はじめに こんにちは、えのかわです。
+特定のRoute53のHostedZoneのみを操作できるIAMユーザを作成したい場面があります。
+そのIAMポリシーを作成したのでメモです。
+HostedZoneの作成 まずRoute53が操作できる環境で２つのHostedZoneを作成します。 IAMユーザの作成 ポリシーは下記です。
+&amp;lt;HostedZoneID&amp;gt;に、そのIAMユーザに操作させたいHotedZoneのIDを記載します。
+今回は enokawa.me のHostedZoneIDを記載しました。
+{ &amp;quot;Version&amp;quot;: &amp;quot;2012-10-17&amp;quot;, &amp;quot;Statement&amp;quot;: [ { &amp;quot;Effect&amp;quot;: &amp;quot;Allow&amp;quot;, &amp;quot;Action&amp;quot;: [ &amp;quot;route53:ChangeResourceRecordSets&amp;quot;, &amp;quot;route53:GetHostedZone&amp;quot;, &amp;quot;route53:ListResourceRecordSets&amp;quot; ], &amp;quot;Resource&amp;quot;: &amp;quot;arn:aws:route53:::hostedzone/&amp;lt;HostedZoneID&amp;gt;&amp;quot; }, { &amp;quot;Effect&amp;quot;: &amp;quot;Allow&amp;quot;, &amp;quot;Action&amp;quot;: [ &amp;quot;route53:GetChange&amp;quot; ], &amp;quot;Resource&amp;quot;: &amp;quot;arn:aws:route53:::change/*&amp;quot; } ] }  検証 作成したIAMユーザでAWSマネージメントコンソールにログインし、Route53にアクセスします。
+権限エラーがでますね。 HostedZone一覧も閲覧できません。 下記の形式のURLでアクセスする必要があります。
+https://console.aws.amazon.com/route53/home?region=ap-northeast-1#resource-record-sets:&amp;lt;HostedZoneID&amp;gt;  enokawa.me のHostedZoneIDを指定してアクセスしてみましょう。 わぁい
+enokawa.org のHostedZoneIDを指定してアクセスすると何も表示されません。
+想定通りの挙動です。 以下の警告文が表示されます。
+ r53_user is not authorized to perform: route53:GetHostedZone on resource: hostedzone/HostedZoneID
+ ALIASレコードは設定できるのか 前述したIAMポリシーにはS3やELB、CloudFrontなどの参照権限が記載されていないので、Alias Targetに候補は出てきません。 が、存在するELBのエンドポイントをペーストしてレコードを登録してみると、、、 お？</description>
+    </item>
+    
+    <item>
+      <title>OpsWorks &#43; CodeCommitでEC2をプロビジョニングする</title>
+      <link>http://blog.enokawa.co/2016/05/14/opsworks-codecommit/</link>
+      <pubDate>Sat, 14 May 2016 18:32:28 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2016/05/14/opsworks-codecommit/</guid>
+      <description>はじめに こんにちは、えのかわです。 今回はOpsWorks(Chef)でEC2インスタンスをプロビジョニングする際にCodeCommitレポジトリを利用してみました。 色々とハマったのでブログで残しておきます。 OpsWorksとCodeCommitについては下記スライドをご参考ください。超ざっくり言うとOpsWorksはAWSに特化したChefサーバで、CodeCommitはGitレポジトリです。
+  AWS OpsWorksハンズオン  from Amazon Web Services Japan 
+  AWS Black Belt Tech シリーズ 2015 - AWS CodeCommit &amp;amp; AWS CodePipeline &amp;amp; AWS CodeDeploy  from Amazon Web Services Japan 
+イメージ 図にするとこのような感じです。間違いがあったらご指摘ください。  クライアントPCからCodeCommitレポジトリにChefレシピをpush OpsWorks AgentがCodeCommitレポジトリをpull(更新) -&amp;gt; update_custom_cookbooks OpsWorks Agentがプロビジョニング(chef solo)を行う -&amp;gt; execute_recipes  CodeCommit用IAMユーザの作成 CodeCommitレポジトリへソースをプッシュするにはIAMユーザが必要になります。まず始めにCodeCommit専用のIAMユーザを作成します。ポリシーはひとまずAWSCodeCommitPowerUserを設定しておきます。 次にCodeCommitレポジトリにアクセスするためのSSHキーを設定します。Security CredentialsタブからUpload SSH public keyをクリックし、公開鍵を貼り付けてください。 公開鍵の設定が完了するとSSHアクセス用のIDが払い出されます。アクセスキーとは別です。 最後に~/.ssh/configにアクセス情報を記載しておきます。先ほど払い出されたSSH Key IDと、秘密鍵を指定します。
+enokawa $ cat ~/.ssh/config Host git-codecommit.</description>
+    </item>
+    
+    <item>
+      <title>VagrantでWordPress環境を作る（MacOSX編）</title>
+      <link>http://blog.enokawa.co/2015/09/06/vagrant-on-macos/</link>
+      <pubDate>Sun, 06 Sep 2015 16:57:47 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2015/09/06/vagrant-on-macos/</guid>
+      <description>はじめに こんにちは、えのかわです。
+今回の記事は自分用の備忘録です。WordPress環境の作成を目標に進めていきます。
+構成は以下のような感じです。
+ CentOS 6.5 Apache 2.2系 MySQL 5.1系 PHP 5.3系 WordPress 最新版  VirtualBoxのインストール VirtualBoxのダウンロードページ(Old Builds)からVirtual5.0をインストールします。最新バージョン(5.02)だとvagrant upでコケるみたいです。 環境にもよりますが、インストールに5分ほど時間かかります。 VirtualBox.pkjをダブルクリックしてウィザードに従って進めてください。 Vagrantのインストール Vagrantのダウンロードページからインストールします。 こちらもインストールに5分ほどかかります。VirtualBoxと同様に、ウィザードに従って進めていきます。 Boxのインストール OSのイメージであるBoxをインストールしてVagrantのセットアップを行います。まず適当なディレクトリを作成します。
+$ mkdir vagrant $ mkdir vagrant/CentOS65 $ cd vagrant/CentOS65  次にCentOS6.5のBoxをインストールします。
+Boxの一覧は、http://www.vagrantbox.es/ にあります。こちらも結構時間かかります。
+$ vagrant box add centos65 https://github.com/2creatives/vagrant-centos/releases/download/v6.5.3/centos65-x86_64-20140116.box ==&amp;gt; box: Box file was not detected as metadata. Adding it directly... ==&amp;gt; box: Adding box &#39;centos65&#39; (v0) for provider: box: Downloading: https://github.com/2creatives/vagrant-centos/releases/download/v6.5.3/centos65-x86_64-20140116.box ==&amp;gt; box: Successfully added box &#39;centos65&#39; (v0) for &#39;virtualbox&#39; !</description>
+    </item>
+    
+    <item>
+      <title>AWS CodeDeployを使ってでデプロイを自動化してみた</title>
+      <link>http://blog.enokawa.co/2015/09/01/aws-codedeploy/</link>
+      <pubDate>Tue, 01 Sep 2015 20:56:17 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2015/09/01/aws-codedeploy/</guid>
+      <description>はじめに こんにちは、インフラエンジニア見習いのえのかわです。 今回は、AWS CodeDeployを使ってデプロイを自動化してみたのでログを残しておきます。 CodeDeployアプリケーションの作成は省略します。 下記のURLがとても参考になりました！
+ http://www.ryuzee.com/contents/blog/7022 http://dev.classmethod.jp/cloud/codedeploy-ataglance/  イメージ 図にするとこのような感じです。間違いがあったらご指摘ください。  クライアントPCからプロジェクトを圧縮してS3にアップロード クライアントからCodeDeployのAPIを叩いてEC2(CodeDeploy Agent)にメタデータを渡す CodeDeploy AgentがS3にポーリングする S3から圧縮されたファイルをダウンロードして展開する  AppSpec.ymlの作成 appspec.ymlは以下のような形です。AppSpecについては、クラスメソッドさんの記事が大変参考になりました。
+version: 0.0 os: linux files: - source: / destination: /var/www/html/ hooks: BeforeInstall: - location: scripts/install_dependencies timeout: 300 runas: root - location: scripts/start_server timeout: 300 runas: root ApplicationStop: - location: scripts/stop_server timeout: 300 runas: root  CodeDeployでプロジェクトをデプロイするには @ryuzeeさんのブログにも紹介されている通り、最終的には以下のコマンドを打たなければデプロイができません。(ポチポチでデプロイできるのかな？)
+deploy pushコマンドでプロジェクトのファイルをzipにしてS3にアップロードします。
+$ aws deploy push \ &amp;gt; --application-name CodeDeployTest \ &amp;gt; --s3-location s3://enokawa-test-bucket/app.</description>
+    </item>
+    
+    <item>
+      <title>DevOps採用システム自動構築ツール「SkyHopper」を使ってみた</title>
+      <link>http://blog.enokawa.co/2015/08/09/skyhopper/</link>
+      <pubDate>Sun, 09 Aug 2015 16:22:36 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2015/08/09/skyhopper/</guid>
+      <description> はじめに こんにちは、インフラエンジニア見習いのえのかわです。
+今回は株式会社スカイアーチネットワークスが開発したDevOps採用システム自動構築ツール「SkyHopper」を使ってみましたのでそのレポートを書きたいと思います。
+今回はAmazon Linuxのt2.microを用いて構築します。 ゴールとしては、SkyHopperを利用してELB+EC2+RDSのよく見る構成を構築します。 SkyHopperとは ひと言でいうと、「ブラウザでAWSの構築ができてchefやServerspecが流せて監視ができるもの」ですかね。長いですね。笑
+SkyHopperのインストール 基本的にはデプロイ手順を順番に進めていけば構築できます。 Cookbookも用意されているのでChefに慣れている方はChefで構築した方が楽かもしれません。
+セットアップ 以下の図のように設定します。 構築が完了したら以下のコマンドを打ってskyhopperを再起動します。
+$ cp -r ~/skyhopper/tmp/chef ~/.chef $ ./scripts/skyhopper_daemon.sh stop $ ./scripts/skyhopper_daemon.sh start  自動的に2台のインスタンスが構築されます。おそらくChefサーバーとZabbixサーバーです。EIPも関連付けられます。 サインアップ サインアップします。masterとadminの意味はまだ分かってないです。分かり次第、更新したいと思います。 顧客の作成 えのかわ株式会社から受注しました。顧客コードの決め方は規約を設けた方がいいと思いました。 案件の作成 えのかわ株式会社から公式HP作成の依頼が来たので新しく案件を作成します。アクセスキーとシークレットアクセスキーはお客様から頂きました。 新規インフラの作成 新しくインフラを構築します。EC2インスタンスも構築するので新しくキーペアーも登録します。新しく作成することもできます。 スタックの詳細（1） あらかじめ用意されているCloudFormationのテンプレートを用います。僕はWordPressのAMIを作成して、テンプレートにAMIを指定しました。 スタックの詳細（2） インスタンスタイプやDBの設定をすることができます。「送信」ボタンを押すと、CloudFormationのスタックが実行されます。 ブラウザでアクセスしてみる ELBのDNSでアクセスしてみます。お決まりのWordPressのセットアップ画面が表示されます。「データベースホスト」欄にRDSのDNS Nameを入力すれば完了です。2台のEC2のアクセスログをtailして負荷分散されることを確認します。 ハマったところ  鍵ペア名に.pemをいれてstack creation failedエラー Default VPCが存在していなくてエラー  気になったところ  ログにACCESSKEYとかSECRETACCESSKEYとか秘密鍵を吐いてるので気をつける必要があると思いました。
+  </description>
+    </item>
+    
+    <item>
+      <title>NagiosのCloudWatchプラグインをつくってみた(PHP)</title>
+      <link>http://blog.enokawa.co/2015/07/29/nagios-check-cloudwatch/</link>
+      <pubDate>Wed, 29 Jul 2015 23:17:11 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2015/07/29/nagios-check-cloudwatch/</guid>
+      <description>はじめに タイトルは釣りです。ごめんなさい。笑
+cloudpack CTOの@suz_labさんがAWS SDK for PHP v1で作成したスクリプトをv2に書き直してみました(本人には了承済みです)。 前回の記事の続きで、今回はCloudWatchのプラグインを使ってEC2のリソースを監視してみたいと思います。
+前提条件  NagiosサーバーににCloudWatch ReadOnly権限のIAM Roleが適用されていること phpがインストールされていること Nagiosサーバーの構築が済んでいること  AWS SDK for PHPをインストール まずはじめにAWS SDK for PHP v2をインストールします。インストールする場所はお好きなディレクトリで。
+$ cd /opt/ $ sudo mkdir php-sdk2 $ sudo cd php-sdk2 $ sudo wget https://github.com/aws/aws-sdk-php/releases/download/2.8.14/aws.zip $ sudo unzip aws.zip $ sudo wget https://github.com/aws/aws-sdk-php/releases/download/2.8.14/aws.phar $ sudo vi composer.json #新しく作成 { &amp;quot;require&amp;quot;: { &amp;quot;aws/aws-sdk-php&amp;quot;: &amp;quot;2.*&amp;quot; } } $ sudo curl -sS https://getcomposer.org/installer | php $ sudo php composer.</description>
+    </item>
+    
+    <item>
+      <title>NagiosのNRPEプラグインを使ってログ監視をする</title>
+      <link>http://blog.enokawa.co/2015/07/27/nagios-nrpe-checklog2/</link>
+      <pubDate>Mon, 27 Jul 2015 21:06:43 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2015/07/27/nagios-nrpe-checklog2/</guid>
+      <description>はじめに こんばんは、インフラエンジニア見習いのえのかわです。
+前回の記事の続きです。今回は監視対象のログ監視をしたいと思います。
+NRPE is 何 NRPE(Nagios Remote Plugin Executor)とは、監視対象サーバーに対して以下のような監視を実現したい時に用います。前回の記事ではpingを打つだけなのでNRPEは必要ではありませんでした。
+ ディスク監視 CPU使用率の監視 メモリ使用率の監視 ログ監視  NRPEのインストール（Nagiosサーバー） それではさっそく設定していきます。まずはじめにNagiosサーバーにNRPE関連のパッケージをインストールします。 /usr/lib64/nagios/plugins/配下にcheck_nrpeというファイルがインストールされます。
+$ sudo yum install nrpe nagios-plugins-nrpe  インストールしたcheck_nrpeコマンドを登録します。
+$ sudo vi /etc/nagios/objects/commands.cfg define command{ command_name check_nrpe command_line $USER1$/check_nrpe -H $HOSTADDRESS$ -c $ARG1$ }  NRPEのインストールと設定（監視対象サーバ） つづいて監視対象サーバに、NRPE関連のパッケージをインストールします。
+$ sudo yum install -y epel-release $ sudo yum install nrpe nagios-plugins-nrpe nagios-plugins-all  nrpe.cfgに設定を書いていきます。Nagiosサーバーからのアクセスを許可します。
+$ sudo cp -p /etc/nagios/nrpe.cfg.sample $ sudo vi /etc/nagios/nrpe.cfg allowed_hosts=127.</description>
+    </item>
+    
+    <item>
+      <title>CentOS6.6にNagiosサーバーをインストールする</title>
+      <link>http://blog.enokawa.co/2015/07/26/nagios-server/</link>
+      <pubDate>Sun, 26 Jul 2015 21:06:45 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2015/07/26/nagios-server/</guid>
+      <description>はじめに こんばんは、インフラエンジニア見習いのえのかわです。
+Nagiosサーバーの構築をEC2上で行ったので、備忘録として残したいと思います。
+この記事のゴールとしては、Nagiosサーバーから監視対象のサーバーに対してpingでの死活監視ができることとします。
+Nagiosのインストール NagiosはEPELリポジトリに登録されているので、EPELレポジトリを追加しておきます。
+$ sudo yum install epel-release $ sudo yum install nagios nagios-plugins-all  アラートメールの設定 Nagiosのアラートメールが送信されるアドレスを登録します。デフォルトの設定ではnagios@localhostとなっているので任意のメールアドレスを設定します。
+念の為にconfigのバックアップをとっておきましょう。
+$ sudo cp -p /etc/nagios/objects/contacts.cfg /etc/nagios/objects/contacts.cfg.sample $ sudo vi /etc/nagios/objects/contacts.cfg email enokawa@example.com;  Apacheの設定 続いてApacheの設定です。BASIC認証の設定をします。
+$ sudo cp -p /etc/httpd/conf.d/nagios.conf /etc/httpd/conf.d/nagios.conf.sample $ sudo vi /etc/httpd/conf.d/nagios.conf ScriptAlias /nagios/cgi-bin/ &amp;quot;/usr/lib64/nagios/cgi-bin/&amp;quot; &amp;lt;Directory &amp;quot;/usr/lib64/nagios/cgi-bin/&amp;quot;&amp;gt; Options ExecCGI AllowOverride None Order allow,deny Allow from all AuthName &amp;quot;Nagios Access&amp;quot; AuthType Basic AuthUserFile /etc/nagios/passwd Require valid-user &amp;lt;/Directory&amp;gt; Alias /nagios &amp;quot;/usr/share/nagios/html&amp;quot; &amp;lt;Directory &amp;quot;/usr/share/nagios/html&amp;quot;&amp;gt; Options None AllowOverride None Order allow,deny Allow from all AuthName &amp;quot;Nagios Access&amp;quot; AuthType Basic AuthUserFile /etc/nagios/passwd Require valid-user &amp;lt;/Directory&amp;gt;  続けてベーシック認証のパスワードを設定します。</description>
+    </item>
+    
+    <item>
+      <title>JAWS-UG初心者支部【第2回】懇親会でLTしてきました！！ #jawsug_bgnr</title>
+      <link>http://blog.enokawa.co/2015/07/25/jawsug-beginner/</link>
+      <pubDate>Sat, 25 Jul 2015 22:57:26 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2015/07/25/jawsug-beginner/</guid>
+      <description>はじめに みなさんこんにちは、インフラエンジニア見習いのえのかわです。
+先週の金曜日に行われたJAWS-UG初心者支部の懇親会でLTをしてきたのでそのレポートを書きます！
+イベントページはこちら https://jawsug-beginner.doorkeeper.jp/events/26430
+togetterはこちら http://togetter.com/li/848886
+運営の加我さん参加者のレポートです。加我さんからは写真をお借りしてます！ありがとうございます！
+第2回JAWS-UG 初心者支部(7&amp;frasl;17) - #ダメなら餃子 http://damenaragyouza.hatenablog.jp/entry/2015/07/21/143643
+経緯 cloudpackエバンジェリストの@yoshidashingoさんに「LTしておいでや」と 言われたので久々に勉強会に参加させていただきました。正直、時間的にLTできないと思っていたので、ラッキーでした。
+LTさせてくれた山崎さん、青木さん、運営のみなさん、ありがとうございました！！
+勉強会 正直、勉強会自体は資料作りに夢中であまり話を聞けていたなかったので加我さんのブログを見ると雰囲気けっこう掴めると思います。次からは事前に準備して臨みたいと思います！
+Piculet 今回のLTのテーマは「AWS初心者がCodenize.toolsでInfrastructure as Codeした話」です。 Codenize.toolsとはAWSのサービスをマイグレーション(移行)するツール群です。クックパッドの@sgwr_dtsさんが作成しています。 今回は、その中でもAWSのSecurity GroupsをマイグレーションするツールであるPiculetについて紹介しました！
+Piculetの良さは--dry-runオプションが使える点です。applyする前に--dry-runで流して、他の人にレビューしてもらった後に applyする流れがいいと思います。Github(プライベートリポジトリなど)でレビューをしてもらうのもアリだと思います。
+$ piculet -a -p prod -r ap-northeast-1 --dry-run   IAMユーザーの権限 Piculetを使用するIAMユーザーのポリシーは以下のような感じです。SGだけを操作できる最低限の権限だけを渡しておきます。 IP制限をかけておくとよりセキュアに運用できると思います。
+{ &amp;quot;Version&amp;quot;: &amp;quot;2012-10-17&amp;quot;, &amp;quot;Statement&amp;quot;: [ { &amp;quot;Sid&amp;quot;: &amp;quot;Stmt0000000000001&amp;quot;, &amp;quot;Effect&amp;quot;: &amp;quot;Allow&amp;quot;, &amp;quot;Action&amp;quot;: [ &amp;quot;ec2:DescribeSecurityGroups&amp;quot;, &amp;quot;ec2:DescribeTags&amp;quot;, &amp;quot;ec2:AuthorizeSecurityGroupEgress&amp;quot;, &amp;quot;ec2:AuthorizeSecurityGroupIngress&amp;quot;, &amp;quot;ec2:RevokeSecurityGroupIngress&amp;quot;, &amp;quot;ec2:RevokeSecurityGroupEgress&amp;quot;, &amp;quot;ec2:CreateSecurityGroup&amp;quot;, &amp;quot;ec2:DeleteSecurityGroup&amp;quot; ], &amp;quot;Condition&amp;quot;: { &amp;quot;IpAddress&amp;quot;: { &amp;quot;aws:SourceIp&amp;quot;: &amp;quot;XX.XX.XX.XX&amp;quot; } }, &amp;quot;Resource&amp;quot;: [ &amp;quot;*&amp;quot; ] } ] }  おわりに 今回はPiculetを紹介しましたが、Codenize.</description>
+    </item>
+    
+    <item>
+      <title>沖国Eggsで初のゲスト講演を開催しました！！</title>
+      <link>http://blog.enokawa.co/2014/10/04/okiu-eggs/</link>
+      <pubDate>Sat, 04 Oct 2014 01:40:57 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2014/10/04/okiu-eggs/</guid>
+      <description>みなさんこんにちは、えのかわです。
+今回、沖国Eggsで初となるゲスト講演を開催いたしましたのでその感想や反省点をこのエントリにつらつらと書いていきます。
+沖国Eggs？ まず「沖国Eggsってなに？」と思う方も多くいると思います。
+沖国Eggsは、沖縄国際大学の生徒を対象としたサークルのようなコミュニティで週に1回集まってITの勉強会をしたり、自分の話したいことをプレゼン（LT）したり、ゲストをお招きして講演して頂いたりします。3年生の後輩と一緒に7月にコミュニティを立ち上げ、毎週木曜日の18時半から2時間半、テーマを決めて学びます。僕自身、よく外に出てJAWS-UG沖縄や、Okinawa.rbなどのコミュニティに参加し、多くの学びを得ることができました。沖国大の学生にも外に出てもらいたいし、自分のレベルとか知ってもらいんですよね。外に出ないままだと自分の現在の立ち位置が分からなくなってしまいます。また、この沖国Eggsがどんどん後輩に受け継いでいってもらったら楽しいなぁって思っていて、僕が社会人になった時にゲストとして講演したいという野望をもっています。「最初は5,6人だったんだよww」ってねww
+沖国Eggsについての詳しい情報はこちらのスライドを参照ください。   沖国Eggs紹介スライド  from Tetsuhiro Nakanishi 
+ということで 今までは10名にも満たない人数でこじんまりとIT勉強会やLT大会をしていたのですが、今回のゲスト講演ではなんと約25人の方に来て頂きました！最初のキックオフでは5,6人しかいなかったので感慨深いものがありますww 注目のゲストは株式会社レキサス 事業推進部マネージャー&amp;amp;エバンジェリストの常盤木 龍治（ときわぎ りゅうじ）さんです。僕は常盤木さんとは繋がっていて、JAWS DAYS 2014というイベントに行った時に非常に多くの方を紹介して頂きました。大変お世話になっている方です。Facebookでゲスト募集中との旨を投稿すると、すぐさま連絡を頂いて、今回講演をして頂く運びとなりました。
+講演の内容 今回、常盤木さんに講演して頂いた内容は大きく分けて3つです。
+ プレゼンテーション講座（初級編）
+ プレゼンテーション講座（中級編）
+ 未来を創る君たちへ 〜テクノロジーの変化の先にあるもの〜
+  残念ながら、最初の2つのプレゼンテーション講座の内容は書く事ができません。なぜならこのプレゼンテーション講座は、常盤木さんが実際に企業様からお金を頂いて研修などで行っている内容であるからです。
+ということで、3つ目の内容「未来を創る君たちへ　〜テクノロジーの変化のさきにあるもの〜」について感想を。といっても僕はビデオカメラで動画を撮っていたり、写真を撮ったりしていたのであまり内容を覚えていませんww とりあえず記憶をさかのぼってざっと書くと、常盤木さん自身について、レキサスについて、クラウドについて、沖縄の優位性・未来について、コミュニティについて、新しい技術について、DevOpsについて、などなどです。こちらはYouTubeに動画を公開していますので来れなかった方はご覧下さい♪僕もあとで見返します。
+ 一番胸を打たれたのは「最も強い者が生き残るのではなく最も賢い者が生き残るのでもない。唯一生き残るのは変化できる者である。」というイギリスの自然科学者チャールズ・ダーウィン氏の言葉です。やはりどの業界でも変化することを恐れると他のライバルに抜かれてしまいます。沖国Eggsも変化しながら成長したいと感じた言葉でした。
+講演後 講演後は参加者からの質問タイムを設けました。皆さん積極的に質問をしていて、こちら側も開催してよかったと感じました。名刺交換も積極的にしていて、最近の学生は名刺もっているんだなぁと関心（僕もってないですww）。
+その後は沖国大近くのカレー屋さん、ポケットマーニーで打ち上げです。常盤木さんがカレー部キャプテンだからという後輩の粋な計らいです♪皆でカレーを食べながらざっくばらんにアットホームな環境で語り合うことができました。
+反省点 今回のゲスト講演の反省点として以下の項目が挙げられました。
+ 受付がなかった アンケートがなかった 運営の少なさ ゲスト講演（沖国Eggs）参加者の対象  今回、実はこんなに多くの人が来てくれるとは思わなくてww 特に受付やアンケートの準備をしていなくて、その点は反省点として挙げました。また運営が少なく、身内の学生に手伝って頂いた点もあるので、コアメンバーを決めて役割を分担しなければならないと感じました。最後の「ゲスト講演の対象」なんですけど、この講演（というか沖国Eggs自体）の対象は沖縄国際大学の学生です。僕自身、「R大なんかに負けないぞ！」っていう気持ちでこのコミュニティを作って、で、参加者のなかにR大生の方がいたり高校生がいたり、そしてなんと企業の方がいたりww と参加対象が曖昧になってきていて、どうしようかなと。いや、R大生の方も高校生の方も社会人の方も「来てよかった」と感想を頂いているので、悪いことではないと思うのですがなんというか。。。今後検討いたしますww
+さいごに 今回、ゲストとして参加して頂いた常盤木さん、参加して頂いた皆さん、運営のみなさん、本当にありがとうございました！もしよかったら感想をブログに書いたり、Facebookで投稿して頂けると運営側としても嬉しいので是非書いてみて下さい♪ 沖国Eggsは変化し続けるので、今後もFacebookページにて情報をチェックして頂けたらと思います。</description>
+    </item>
+    
+    <item>
+      <title>iret株式会社 cloudpack事業部（以後 cloudpack）でインターンしてきました！</title>
+      <link>http://blog.enokawa.co/2014/10/01/internship/</link>
+      <pubDate>Wed, 01 Oct 2014 01:27:05 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2014/10/01/internship/</guid>
+      <description>皆さん初めまして。cloudpackインターン生の栄野川です。
+今回、大学の夏休みを利用して、cloudpackでインターンに行ってきました！
+インターンを受けようと思った理由は、実は僕はcloudpackから内定を頂いていて、来年の4月から社会人としてcloudpackにジョインします。cloudpackで働くにあたって、どのような業務内容なのか、どういった雰囲気で仕事をしているのか、また入社するまでにどのような事を学べば良いのかを知るためにインターンを希望しました。
+今回のcloudpackインターンでは、9月の16日から26日の土日祝祭日を除いた8日間、学ぶことができました。インターンで学んだことや感じたことをこのエントリに書いていきます。
+インターン前日 インターンの前日に上京しました！
+実は、ちゃっかり下見してきました。笑
+1週目 今回、僕がインターンで学ぶ場所はなんと！cloudpack虎ノ門オフィスでした！！！ネット上の記事ではオフィス内の写真をみることができましたが、実際に見る内観はスゴいです。このような素晴らしい環境で働けると想像するだけでニヤニヤしてきます。笑
+さて、インターンの初仕事は全体ミーティングでした。オシャレな会議室で各地にあるオフィスと繋いでビデオ会議をしました。内容としては、社員のスケジュールの確認をしていました。やはり社員全員のスケジュールを共有することは大事なことなのですね。その後はcloudpack技術ブログのレビューです。cloudpackのエンジニアが執筆したブログエントリを社員どうしで共有します。AWSはサービスのアップデートが早く、次々と新しい技術が生まれます。その情報を早くキャッチし、チェックすべき記事を技術力の高いエンジニアやエバンジェリストの方が紹介、解説してくれます。その内容に疑問点があればその場で質問したりして解決します。ちなみに僕は皆さんが言っていることがさっぱり理解することができませんでした。常日頃からアンテナを立てておかないと取り残されてしまいます。
+会議とブログレビューの後は、今回僕がお世話になるR&amp;amp;D（技術支援）チームの紹介をチームリーダーの廣瀬さん（王子）にして頂きました。皆さん個性的で、面白い人がたくさんいるチームです。笑 しかも皆さんスゴいエンジニアで、MicrosoftのMVPであったり、ハッカソンで優勝経験のある人であったり、ネットワークのスペシャリストであったりWindows Azureのスペシャリストであったりと自分がものすごく小さく感じました。
+1週目の殆どは各チームの社員の方にインタビューを行い、cloudpackではどのような業務を行っているのか、どのようなチームがありそれぞれの役割はどうなっているのかなど、組織についての理解を深めることができました。皆さん個人個人に動くのではなく、チーム内またはチーム同士で協力し合いながら業務を進めていました。僕の個人的なイメージでは、一人一人がデスクに向かって黙々と作業をするようなものと思っていましたが、皆さんフランクで、時には笑いも起きて「とても雰囲気の良い会社だなぁ」と最初の1週目で感じることができました。社長や人事担当、CTOなどの役員とも距離が近く、とてもフラットな組織でこれはベンチャーならではのメリットだと感じました。
+2日目には初めてのタスクをもらうことができました。僕がエンジニアの川原さんにインタビューをさせて頂き、川原さんはSensuでメンテナンスを行っていて「Sensuを調べてごらん」と言われてSensuについてリサーチし、Qiitaに概要をまとめるというタスクに取りかかりました。文章をまとめるのにかなり時間をとられてしまい、また、Sensuの公式Webサイトが英語で理解するのに時間がかかってしまいました。ITの世界では英語の文章を理解することが必要なのだと感じました。まとめたQiita記事はこちらです。
+Sensuを理解する - http://qiita.com/enokawa/items/511f7d92d582fea0aca2
+3日目には、エンジニアの田村さんからタスクをもらうことができました。要件は、「某社がファイルサーバとしてS3を使いたいと。かつ安く運用するためにS3にオブジェクトがアップロードされてから1日後にはGlacierに移動（アーカイブ）させたいとのこと。クライアントソフトはCyberduckでS3へIAM接続を行う。」タスクは大きく分けて2つあります。1つ目は、クライアントソフトからオブジェクトが見られるかを検証。2つ目は、GlacierからオブジェクトをS3へ戻す（リストア）する際に、手順のスクリーンショットをとりながらドキュメントにITの素人でも分かりやすいようにまとめることです。また、オブジェクトをGlacierからS3にリストアした際に、そのオブジェクトは何時間S3として使えるか、オブジェクトをGlacierからS3にリストアして、そのオブジェクトが再びGlacierにアーカイブされるまでの時間を記録しなければなりません。
+1週目で田村さんから頂いたタスクの1つ目は消化することができました。しかし、2つ目のタスクで色々と苦戦してしまいました。オブジェクトをGlacierからS3にリストアする際には3〜5時間かかります(Amazon Glacier のよくある質問 - https://aws.amazon.com/jp/glacier/faqs/ )。S3のマネージメントコンソールから目視で確認しなければならず、それを効率化したいと考え、AWS SDK for Rubyを利用し、それを自動化するスクリプトをこのインターン中に作成して最終日にLTをすることにしました。LTのテーマは長いですが、「GlacierにあるオブジェクトをS3にリストアする際にStorage Classをチェックしつつ、リストアが完了したら通知を送るスクリプト」です。
+2週目 2週目からは、田村さんから頂いたタスクを進めながらAWS SDK for Rubyの学習を行いました。S3のバケット名を取得したり、作成したりするスクリプトは書くことはできたのですが、そのオブジェクトがS3（STANDARD）なのかGlacierなのかを表すStorage Classを取得することができずに時間を使ってしまいました。最初はAWS SDK for RubyのVersion1を使ってスクリプトを書いていたのですが、そろそろV2がリリースされるかもしれない時期だったので、Version2を使ってスクリプトを書きました。
+インターンも終盤を迎え、ずっと同じ壁にぶつかっていました。Googleで調べても問題を解決することができませんでした。そんな時に王子に、「問題にぶつかった時に、1.5時間調べて分からなかったら調べ方を間違っている」というアドバイスをもらいました。確かに僕は問題にぶつかって、ずっと分からないまま時間を浪費してしまいました。周りのエンジニアの方に質問することができず、ずっと自分で抱え込んでいました。聞くことが勉強であって、聞かないと何も分からないまま時間が過ぎてしまいます。そういった点が今回のインターンの反省点でもあります。
+その後からはプログラマのセバスチャンさんについてもらい、ググり方やドキュメントの読み方、プログラミングの基礎を教えてもらい、一緒に作業していると10分も絶たずにぶつかっていた問題を解決することができました。やはり人に聞かないと先には進めないのだと感じました。質問をするにしても、「これが分からないので教えて下さい。」ではなくて、「今こういうことをしようとしていて、こういう手順で進めていて、ここが分からなくて、どう調べたらよいですか?」という風に質問するクセをつけます。
+最終日 いよいよインターン最終日です。午前中は成果報告に向けての資料作成を行いました。今のコードのままだと成果物は完成できないと判断して、完成できなかったという旨をスライドの中に入れました。お昼後に、だいたいのフレームはできたので、R&amp;amp;Dチームの津村さんにプレゼンのレビューをお願いしました。レビューの内容としては、「図が少ない、つかみが甘い、タイムバランスをしっかりしたほうがよい」などのフィードバックをもらい、資料を改善していきました。
+王子にもレビューをしてもらうと、「完成しないの？コード見せてみて。」と言われ、そこで初めて王子にコードレビューをして頂いて、「ここまでできているなら完成させられる。なんで諦めた？設計や方法論の相談を誰かにした？」と言われました。ふたを開けてみると、自分がやっていることはもう完成に近づいていて、完成させる方法をいくつでもあったらしいです。その方法論を質問することができませんでした。僕は同じミスを2度も犯してしまいました。自分自身で完成できないと決めつけていました。このミスがインターンで一番の反省点です。
+その後は津村さんについてもらい、コードについて色々とアドバイスをもらってなんとか成果物を完成させることができました。しかし、殆どが津村さんの書いたコードで、とても悔しいです。本当に自分は基礎が分からないのだと痛感しました。その後はプレゼンを仕上げて、プレゼンのイメージトレーニングをしました。
+いよいよインターンの成果報告会です！役員の方も来ていたので、ものすごく緊張してカミカミになったり、早口になったり、デモの時にタイプミスをしてしまったりしましたが、なんとか最後まで発表することができました。自分なりに言いたかったことは全部言えたと思っています。
+プレゼンの資料はこちらです 
+プレゼン前半の成果物についてのレビューとして、「AWS SDK for Ruby V2で作ったのだから、ぜひ公開して欲しい、タイムアウト機能はいけない、スタート時間とストップ時間が分かるとよい、ゆっくり話して、メモリリークはある？」などなど、とても貴重なフィードバックを得ることができました。
+後半のcloudpackで学んだことに対してのレビューとして、「入社までに人間力であったり、表現力を身に付けておくとよい、入社時にはプロとして来て欲しい、技術的にここは負けないぜっていうモノを持っておいた方がよい、在学中にしかできない卒業論文をしっかりすること、それをおろそかにすると後で災難になる、ITの勉強をしない方がいい、cloudpackのお客様情報を見ておくとよい、楽しんで」などなど、多くのフィードバックを得ることができました。
+おわりに 今回、cloudpackで2週間のインターンを体験し、エンジニアとしてではなく、人間として多くのことを学ぶことができました。来年の4月から入社する身として自分に足りないことが山ほどあることを認識した、自分のエンジニアとしてのレベルの低さを痛感したとても濃い2週間でした。これから入社に向けて、大学で卒業論文に集中し、発表ができる機会をおろそかにせず、全力で学びます。かつ、成果報告で話した「入社までにやること」計画を立てて、優先順位を付けてタスクを消化していきます。
+今回、インターンの受け入れてもらったcloudpackの皆さん、本当に2週間お世話になりました！そしてありがとうございました。入社する時にはもっと成長して、プロとして早いスタートを切れるように準備しておきます！
+#おまけ 最後の成果報告後の写真をアップしたいと思います♪
+週明けに沖縄に帰ってすぐ海にいきましたww
+やっぱりキレイですね〜♪沖縄を離れて沖縄の良さを改めて感じることができました！！
+以上です♪
+ありがとうございました！</description>
+    </item>
+    
+    <item>
+      <title>デジラボおきなわクリエーターズキャンプに参加してきました！</title>
+      <link>http://blog.enokawa.co/2014/08/20/digilab-okinawa/</link>
+      <pubDate>Wed, 20 Aug 2014 01:22:59 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2014/08/20/digilab-okinawa/</guid>
+      <description>といっても運営スタッフとしてなんですけどねw
+３日間、とても貴重な経験をさせていただきました！！
+デジラボおきなわ（https://www.facebook.com/DigiLabOkinawa）
+写真アルバム（https://www.facebook.com/DigiLabOkinawa/photos_stream）
+Ustream（http://www.ustream.tv/channel/digi-lab-okinawa）
+togetterまとめ（http://togetter.com/li/707864）
+１日目 特に何もしてません 笑 遅刻してすみませんでした。。。
+２日目 朝食の準備や後片付けをしたり、昼食のピックアップに行ったり、参加者の制作を見学したりしました。ラズベリーパイを利用したプロジェクトやNXTレゴマインドストームを利用したプロジェクト等、各チーム、独創性に富んだプロジェクトばかりで関心しっぱなしでした！
+夜は３日目のファイナルプレゼンテーションに利用するスライド（ウェルカムスクリーン）を作成したり、当日に流すBGMを選定したりしました。かなり夜おそくまで作業をしていたのですが、それでも子どもたちはプレゼンの練習をしていて胸を打たれました。
+３日目 最終日の時間です。僕は会場の設営をしたり、プロジェクターの設定をしたり、音響の設定をしました。すごく上等な設備で配線フェチwな僕としてはとても興奮しましたね！こういった裏方な仕事は大好きです！！ま、本番はもう二人のスタッフにお任せしたんですけどww
+いよいよファイナルプレゼンテーション本番です！いくつかハプニングはありましたがなんとか無事に？終えることができました！！それにしても子どもたちのプレゼンテーションは凄かったです！英語でプレゼンテーションをしてました！小中学生の間に英語で、しかもOISTという素晴らしい会場でプレゼンが出来るなんて羨ましい限りです。もう今後はどんな会場でも余裕でプレゼンができるでしょう！
+特に印象に残ったプレゼンテーションは西原中学校でした。ラズベリーパイを利用してドラムを叩いて、各生徒がギターやシンセを弾いて演奏するという内容でした。彼女たちは前日、夜遅くまで練習をしていてとても努力していました。本番にあの演奏を聴いて、僕は鳥肌がめちゃくちゃ立って少し泣きそうでした（というのは内緒ですw）。その甲斐あってか彼女たちは一番優秀な賞をとることができました。その際に彼女たちは泣いていたので、相当キツかったんだろうなって思いました。おめでとうございました。
+アフターパーティ ファイナルプレゼンテーションの後はアフターパーティがありました。なんと！豚の丸焼きが振る舞われました！参加者やゲスト、スタッフも含めて皆さんざっくばらんに会話を楽しんでいました！僕は懇親会が苦手でうまく会話に入るのが億劫なので来年度から企業で働く身として改善します。。。
+さいごに 今回のイベントで僕が一番感じたことは危機感です。参加者の半数以上（たぶん）が英語でコミュニケーションをとっていて、プレゼンテーションも英語。僕もレキサスアカデミーで英語プレゼンを経験しましたが、それ以降は特に何もしていません。今後は日本人も英語を喋れて当たり前な時代になる可能性も十分ありえるので、「英語を喋れるようになりたい」ではなくて、「英語を喋れるようになる」のが僕の目標です。これはマストな課題です。もちろん英語だけではなく、ITに関する知識も身につけなければなりません。小中学生の頃にラズベリーパイを使ってコンソール開いて黒い画面を叩くなんて僕は経験できませんでした。このままだと完全に彼ら彼女らに抜かれてしまいます。現状に満足せず、日々努力を怠らないようにします。
+あと、今回、運営スタッフとして手伝って頂いた、特にKBCの学生の方々、本当にありがとうございました！！朝ご飯を調理をして頂いたり、洗い物をしてくれたり、買い出しに行ってくれたり、受付をしてくれたり、豚の丸焼きをピックアップにいってくれたり、面倒な仕事をして頂きました。
+最近、デジラボおきなわをはじめ、CA Tech Kids沖縄でもメンターとして手伝わせて頂き、非常に子どもたちと関わる機会が増えました。自分自身、レキサスアカデミーで様々なことを学ばせて頂きました。こういった教育イベントに参加するなかで、僕も何か沖縄に貢献したいという気持ちがとても大きくなってきました。何か手伝って欲しいという方は僕に連絡を下さい！力になれるかどうかは分かりませんが、最善を尽くします！
+今回、僕をスタッフに誘ってくれた哲大くん、そしてそれを迎え入れてくれた飯塚先生、参加者、ゲスト、メンター、ジャッジ、オーガナイザー、スタッフの皆さん、本当にありがとうございました！！！！！</description>
+    </item>
+    
+    <item>
+      <title>ハッカーズチャンプルー2014に参加してきました！ #hcmpl</title>
+      <link>http://blog.enokawa.co/2014/07/15/hackers-champloo-2014/</link>
+      <pubDate>Tue, 15 Jul 2014 01:15:26 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2014/07/15/hackers-champloo-2014/</guid>
+      <description>みなさんこんにちは！エノカワです。
+ご無沙汰のブログとなってしまいました。。。
+先日、ハッカーズチャンプルー2014に参加してきたのでそのログを。
+イベントのtogetterはコチラ（http://togetter.com/li/692127）
+Ustはコチラ（http://ustre.am/1fvYY）
+アルバムはコチラ（on.fb.me/1mXNVJd）
+ゲスト／参加者のレポート
+ハッカーズチャンプルー2014に参加してきました - 銀座で働くデータサイエンティストのブログ http://tjo.hatenablog.com/entry/2014/07/14/192251
+ハッカーズチャンプルー 2014 に参加してきました #hcmpl - Thanks Driven Life http://gongo.hatenablog.com/entry/2014/07/12/234141
+ハッカーズチャンプルー2014に参加してきました - tnaototo&amp;rsquo;s diary http://tnaototo.hatenadiary.jp/entry/2014/07/14/225934
+ハッカーズチャンプルー2014 に行ってきまして、面白かった情報を、自分のためにメモメモ、知人友人へのシェアシェア です。#hcmpl
+http://catmeetsautumn.blogspot.com/2014/07/2014.html
+ハッカーズチャンプルー 2014 に参加、久しぶりのLT #hcmpl - I/O BLOG; http://yutakakinjyo.hatenablog.com/entry/2014/07/13/173324
+HACKERS CHAMPLOO2014に参加してきたので備忘録 - uranariのブログ http://uranari.hatenablog.com/entry/2014/07/14/235653
+atton.blog: ハッカーズチャンプルー 2014 に行ってきた http://attonblog.blogspot.com/2014/07/hackers-champloo-2014.html?spref=tw
+ブログの書き方ヘタクソなので参考になります。^^;
+今回はボランティアスタッフとしてイベントをサポートさせて頂きました。
+ちょうどJAWS DAYS2014に参加した頃からイベントのスタッフをしたいなぁと思いつつ、クラウドチャンプルー、Cloud on the BEACHにひき続き、運営に携わることが出来ました。運営メンバーに快く快諾して頂いたスタッフの皆様、西島さん、ありがとうございました。
+さて、今回は恒例のカメラマンだけと思いきやまさかの送迎係！こんな若い僕がスーパーエンジニア達をお送りできるだろうか。。。そわそわしている間に当日を迎えてしまいました。しかも送迎するのは日本仮想化技術株式会社CEOの宮原さん、株式会社メトロシステムズの花田さん、KAIZEN platform Inc. の伊藤さん。
+&amp;hellip;スーパーエンジニアだらけ((((；ﾟДﾟ))))ｶﾞｸｶﾞｸﾌﾞﾙﾌﾞﾙ
+ま、まぁスーパーエンジニア達とお話できる良い機会だし。。（震え声 案の定、車内でh (ry
+気を取り直して、今回のハッカーズチャンプルー2014は前夜祭、カンファレンス、ビーチパーティの３部構成でした！！
+前夜祭 の前に、３週間前ほどに主催者からツイートが。
+ご指名させて頂きました皆様、ハッカーズチャンプルー前夜祭のLTタイトルが決まっていましたらご連絡下さい！m(_ _)m&amp;#10;&amp;#10;@libkinjo&amp;#10;@takkuru98&amp;#10;@simanman&amp;#10;@nanophate&amp;#10;&amp;lt;a href=&amp;ldquo;https://twitter.com/enkw&amp;rdquo;&amp;gt;@enkw_
+&amp;mdash; 西島 幸一郎 (@k_nishijima) 2014, 6月 30</description>
+    </item>
+    
+    <item>
+      <title>Cloud on the BEACH2014に参加してきました！</title>
+      <link>http://blog.enokawa.co/2014/04/27/cloud-on-the-beach-2014/</link>
+      <pubDate>Sun, 27 Apr 2014 01:03:39 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2014/04/27/cloud-on-the-beach-2014/</guid>
+      <description>皆さんこんにちは！
+大学４年次に進級したエノカワです！
+はじめに 2014年4月26日、沖縄で最大級のクラウドイベント、「Cloud on the BEACH2014」に参加してきました！私は今回、JAWS-UG沖縄の運営メンバー（カメラマン）としてイベントをサポートさせて頂きながら、発表者のプレゼンも聞きながら、という形になりました。
+前夜祭 実はCloud on the BEACHの前日に、前夜祭がありました。IBS沖縄さんのキレイなオフィスにて行われました。メインコンテンツは大LT大会という事で沖縄のIT界に従事する方々のプレゼンです。お酒も入り、皆さん軽く酔っぱらった感じでゆる〜いLT大会となりました。
+内容については今話題のデジタルファブリケーションやiOSのテスト自動化について、監視（Zabbix）について、クラウドについて等、クラウドに関わらず幅広い分野のLTが披露されました。ADSJの小島さんの息子さんの初LTをお目にかかれたのは光栄でしたww中学生なのに物怖じしない性格らしいので自分の時と比べたら…その話は置いといて。僕も「弾丸でJAWS DAYS2014に行った話」というテーマでLTをさせて頂きました。もっとプレゼン上手くなりたいですねー。練習しなければ。
+その後は２次回という事で那覇市の居酒屋に移動し、飲み直しました。僕は車で来ていた事もあってお酒は飲んでいなかったのですが、なんとサーバーワークスの桶Tさん、cloudpack比企さん、レキサスの常盤木さんというクラウド界のスーパースターを送り届けるという重大な任務を遂行しましたwwwwでも皆まともにナビをしてくれませんでした笑。居酒屋では面白い話をいっぱい聞けたので楽しかったです♪
+当日 さあイベント当日です。今回のCloud on the BEACHは初心者・未経験者トラックと経験者トラックに分かれている形となりました。先月の15日、新宿で行われたJAWS DAYS2014もジャンルによってトラックが分かれていましたね。本日の会場は宜野湾市にあるGwave 宜野湾ベイサイド情報センター２階のインキュベートシェアオフィス、プレゼンテーションルームの２部屋です。
+初心者・未経験者トラック 初心者・未経験者トラックでは５つのセッションがありました。
+ セッション1 初めてのクラウド　AWSのご紹介 by ADSJ小島さん セッション2 AWSのサービス全部紹介！ by サーバーワークス桶谷さん セッション3 AWSのセキュリティについて by ADSJ堀内さん セッション4 初めてのAWS Direct Connect by cloudpack比企さん セッション5 AWSのセールスを始めて1年・・・をふりかえってみた |ω・`）チラ ～お客様（中小企業）へのご提案顛末記～ by インフォームシステム株式会社杉谷さん  未経験者トラックでは各セッションごとにask the speakerという発表者に質問する時間を設けました。皆さん積極的に鋭い質問を投げかけていて良いセッションになったのではないのでしょうか。僕は写真を撮っていてあまり発表は聞けなかったのですが、次回はこちらで発表を聞きたいですねww
+経験者トラック 経験者トラックでは３つのセッションがありました。
+ セッション1 ユージー＆ヨーギーの AWS Summit 2014 San Francisco道中記 by 株式会社レキサス与儀さん、下門さん セッション2 大阪のイノベーションやコミュニティーファーストの今とこれから by イノベーションエッグ代表 比企さん セッション3 CDP道場 乱取り稽古！  僕は写真を撮りながら、主にこのトラックに参加しました。セッション１のSan Francisco道中記では日本のアメリカの違いを感じました。今の時代はIoT（Internet of Thing）、IoE（Internet of Everything）が注目されていて、Googleグラス や腕に付けられるデバイス等のウェアラブル端末が盛り上がっているらしいです。また、シリコンバレーにおけるITスタートアップにAWSはマストらしいです。確かにAWSならスモールスタートで従量課金で始められて、売れなくても費用的なデメリットは大きくありません。もうスタートアップはAWSを避けては通れないのですね。</description>
+    </item>
+    
+    <item>
+      <title>JAWS DAYS 2014に参加してきました！</title>
+      <link>http://blog.enokawa.co/2014/03/16/jawsdays2014/</link>
+      <pubDate>Sun, 16 Mar 2014 00:49:52 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2014/03/16/jawsdays2014/</guid>
+      <description>皆さん、こんにちは！
+エノカワです。
+タイトル通りJAWS DAYS 2014に参加してきました。
+流れ的には
+3&amp;frasl;15 1:00　航空券ポチる
+3&amp;frasl;15 8:40　那覇発
+3&amp;frasl;15 10:40 羽田着
+3&amp;frasl;15 13:00 会場到着、イベント参加、懇親会、二次会、、、
+3&amp;frasl;15 21:00 新宿から品川へ
+3&amp;frasl;16 1:15 リムジンバスで成田国際空港へ
+3&amp;frasl;16 6:00 成田発
+3&amp;frasl;16 9:00 那覇着
+3&amp;frasl;16 11:00 家着
+まさに弾丸ですね。０泊２日ってヤツです。ちなみに一人です。
+３月１５日の朝１時に航空券をポチりまして、同日８字４０分の便で那覇空港から羽田へ飛び立ちました。 実は初めての上京で、電車にも乗ったことは無く、田舎感丸出しでしたねwww
+でまぁなんとか電車を乗り継ぎましてベルサール新宿グランドにたどり着く事が出来ました。やった！ その時の時刻はちょうどお昼休憩が終わる頃で、僕は午後のセッションから参加することにしました。
+まずは株式会社レキサスさんの常盤木さんと合流し（常盤木さんは沖縄で繋がっています）、各トラックを回りながら多くの人を紹介していただきました。 アマゾンの中の人の堀内さんや小島さん、玉川さんなど相当な顔ぶれです。もちろん名前は知っている方々ですが生で会えるのは本当に感動です。せっかく沖縄からきたのだもの、「常盤木さんを使おう」そう考えました。
+自分は名刺を持っていなかったのでその代わりにステッカーを渡しましたww
+レキサスアカデミーという人材育成プロジェクトに参加させていただいた時に制作したサービスです。 「#MacFriends」というサービスで、Macbookの背面をシェアすることができるサービスです。 背面の写真を撮ってハッシュタグ#MacFriendsを付けて投稿するとmacfriends.net上でシェアできます。
+本題のトラックですが、僕が主に参加したセッションは西島さんと小室さんによる「料金体系グランドマスター王者決定戦」とランサーズ金澤さんによる「クラウドソーシングLancersを支えるRDS for MySQL」についての話の２つです。
+料金体系グランドマスターについて。僕はAWSの料金体系について深く理解していなくて、「え？こんなに掛かっちゃうんだ！」ていう感じでしたww 料金の計算も全然できなくて、将来AWSをお客さんに提案する際に必要な知識なので学んでおきます。。。
+RDS for MySQLの話については、RDSのメリットとデメリットを的確に説明していて分かりやすかったです。 メリットとしてはMulti AZを配置できたりフェイルオーバーができたりリードレプリカを気軽に作成できるなど。 デメリットはEC2と比べて少し料金が割高だとかデフォルトでは日本語が全文検索できなかったりだとか。 RDSの長所と短所を理解した上でランサーズでは運用を行っているそう。
+アマゾン芸人の熱いLTバトル！A-1 GP！は面白かった！
+特にしみずさんの「Kinesisでフリーザを撃て！」が腹痛かったww
+ネタが面白いのはもちろんですが、しっかりとAWSを使った仕組みができていてさらにUnityで「見える化」を実現していました。 ネタの裏にはしっかりとした技術があって、笑いと関心の連続でした。
+僕もいつかは話す側になってみせます！（芸人ではない）
+  [初音ミク] Kinesis でフリーザを撃て！  from Takayuki Shimizu</description>
+    </item>
+    
+    <item>
+      <title>Lexues Academy を卒業しました。</title>
+      <link>http://blog.enokawa.co/2014/03/08/graduated-from-lexues-academy/</link>
+      <pubDate>Sat, 08 Mar 2014 00:39:03 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2014/03/08/graduated-from-lexues-academy/</guid>
+      <description>皆さんこんにちは、エノカワです。
+私は１０月から今日までの約５ヶ月間、レキサスアカデミーという人材育成プロジェクトに参加していました。
+Lexues Academy の内容は実際にモノを創って公開して使ってもらうというものです。
+この５ヶ月間で多くの事を学びました。モノづくりの基礎、公開することの大切さ、マーケティングの基礎、プレゼンテーションの技法などなど。学校では学べない、とても貴重な経験をさせていただきました。
+実際、自分はこの５ヶ月の間で２つのサービスをリリースしました。
+１つ目はカメラアプリケーションの「モノカム」。
+２つ目はMacbookの背面をシェアする「#MacFriends」。
+自分はプログラミングが得意ではなく、それでもこの５ヶ月間で２つのサービスを公開できたことにとても達成感を感じています。もちろんこの２つのサービスにはまだ足りない機能はあります。まだ不完全です。しかし、公開してユーザに使ってもらう事で、また失敗することで新しいことを学ぶことが出来ました。失敗は成功のもととはこのことですね。このサービスはもっと良くなります。良くします。そう、使ってくれるユーザがいるから。（カッコいいw）
+話は飛びすぎましたが今日は最終成果報告会でした。英語でプレゼンさせていただきました。まあ自分的には８５％の出来です。懇親会でそれいったら皆には冷めた目線をされましたけどw）
+そうそう。今日の成果報告会に来ていた中学２年生の娘がいて、その子が感想で「自分で作った作品ならもっと胸張れば良いのに」といってました。多分。自分はもともと謙虚な性格で、自分の事を自慢することが苦手でした。というか嫌でした。というか自分で自分を下げていました。それは良くないことだと今日きづきました。もっと誇張していいんだ。そう思いました。もっと胸張ります！自分の作品に誇りをもちます。自分の作品を自分で「クソアプリ」だというのはもう辞めます！！よし！
+決意表明で公言したとおり僕は在学中にシリコンバレーに行きます。現在は大学３年次なので来年度は絶対に行きます。一回り大きくなって帰ってきます。よろしくお願いします。
+このレキアカで学んだことを今後、活かしていきたいです。
+やばい。文章がヘタクソすぎる。。。 日本語も勉強します。</description>
+    </item>
+    
+    <item>
+      <title>【備忘録】herokuへのデプロイ</title>
+      <link>http://blog.enokawa.co/2014/01/22/deploy-to-heroku/</link>
+      <pubDate>Wed, 22 Jan 2014 00:28:28 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2014/01/22/deploy-to-heroku/</guid>
+      <description>備忘録として、ローカルで作成したrubyプログラムを
+herokuへデプロイしたのでそのログを。
+環境
+MacBook Pro 13inch (Mid 2012)
+OS X 10.8.5
+iTerm2
+まずはheroku-toolbeltなるものをインストール
+次にherokuをインストール
+sudo gem install heroku
+次にherokuにログイン
+heroku login
+次にSSH鍵を作り直す
+heroku keys:clear
+heroku keys:add
+次に簡単なsinatraアプリケーションを作成します。
+# app.rb require &#39;sinatra&#39; get &#39;/&#39; do &amp;quot;Hello World&amp;quot; end  # Gemfile source &#39;https://rubygems.org&#39; gem &#39;sinatra&#39;  # Procfile web: bundle exec backup config.ru -p $PORT  # config.ru $:.unshift(File.dirname(__FILE__)) require &amp;quot;sample&amp;quot; run Sample  # .gitignore .bandle  ローカルで起動
+foreman start</description>
+    </item>
+    
+    <item>
+      <title>JAWS-UG沖縄 勉強会 第６回に参加してきました！</title>
+      <link>http://blog.enokawa.co/2014/01/13/jawsug-okinawa-6/</link>
+      <pubDate>Mon, 13 Jan 2014 00:14:05 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2014/01/13/jawsug-okinawa-6/</guid>
+      <description>こんばんは！エノカワです！
+今日は宜野湾のGwave Incubateにて、
+JAWS-UG沖縄 勉強会 第６回に参加してきました！
+http://jaws-ug-okinawa.doorkeeper.jp/events/6958
+なんと！今回の勉強会はあのAWSサムライが４人集結ということで
+すごく豪華なメンバーが揃いました！
+ビッグフェイスすぎて、恐縮すぎて、光栄すぎて、萎縮してしまいました。笑
+学生が僕一人だけということもあって&amp;hellip;（言い訳）。
+まあ、その話はさておき今回の勉強会はワールドカフェ、LT、サムライLTでした。
+ワールドカフェではグループを３つ作りまして各チームでRFP（提案書）を作成して発表・評価をするという流れでした。あと、各チームに西島さんを除くサムライがついてくれました。
+僕自身、RFP？何それおいしいの？レベルだったので（学生だし知らね）少し困惑したのですが要するに今回の勉強会では「御社のインフラをオンプレミスからAWSへ移行するのを提案しましょう」という形でした（間違ってたらスミマセン）。
+社会人の方々とサムライが手助けしてくれたので、僕の出番はあまりありませんでしたが、かなり勉強になりました。オンプレの問題を洗い出してAWSに移行することでどう改善できるのかを考えたりしてました。あまり発言することは無かったけど皆さんの言ってる事（技術的な事）を理解することができたので良かったです。本当はもっと質問したり発言するべきなんだけどなー&amp;hellip;ココが反省点です。
+その後のプレゼンも社会人の方にやって頂きました。皆さん本当に人前で話すのが上手でとても勉強になりました。実際のビジネスの場でもこんな感じなのかなー？あまりイメージができないですorz
+３チーム発表したのですが、投票の結果、小室さんのチームが優勝しました！でも小室さんがプレゼンしてたからインチキだよーーww しかし説得力がありすぎる！あと、優勝チームには、吉田さんからstack driverのTシャツが贈られました。
+めちゃくちゃTシャツ欲しかった〜〜〜orz
+その後はLTタイムでした。題して「教えてあなたの必殺技」です！ @tnaototoさん、@nijikotさん、@asumaslvさん、@k_nishijimaさんの４人でした。 個人的には@tnaototoさんのLTが印象的でしたねー。EC2のスポットインスタンスを$10で入札したらTerminateはされないけど金額が大変なことになっていたという話でした。 @nijikotさんの話はあるあるでしたねー♪S3、Cloud Frontは最強ですね。@asumaslvさんの話は面白かった。Route53は安すぎて&amp;hellip;wwていう話がおもしろかったです。@k_nishijimaさんの話は少し難しかったけど、必要な時に、必要な分だけ、DynamoDBを利用するという話でした（間違っていたらスミマセン）。コスト面の話もあって勉強になりました！
+次にAWSサムライのLTタイムです！吉田さんのLTは、「一撃営業」を封印するという話で、僕は「一撃営業」についてよく知らなかったので、おもしろかったです（あまりシェアしちゃいけないのかな？笑）。プレゼンの仕方も上手で、すごい。さすがエバンジェリスト。次に小室さんのLTで、あまり内容は覚えていないです。とりあえず黒執事を読め？観れ？ということでしたww 最後に石田さんのLT。聞いた事が無いサービス名がいっぱい出てきて戸惑ったけど、「AWSをもっと多くの人に知ってもらおう、使ってもらおうという働きを皆で起こそう、拡散しよう。」という言葉がスゴく胸に響きました。ごもっともだと思いましたねー。今日の勉強会でいちばん印象的なLTでした。
+これで勉強会は終了しましたが、その後に懇親会に参加させて頂きました！ しかも無料で！学生バンザイ！
+皆さんの話を聞いてずっとウンウン（頷き）してました。本当におもしろい！ 常盤木さんの話は本当に人を頷かせるなーと思った！
+今回のイベントは本当に面白かった！ワールドカフェも実際に体験できたし、著名人のLTも聞く事ができたし、ラッキーでした。常盤木さんに「若い貴重なインフラエンジニアですよこの子は」って言われたのは嬉しかったというのと、自分が沖縄のインフラ界を引っ張っていかないといけないなという責任感を勝手に感じました。もっと多くの人にAWSを知ってもらいたいし使ってもらいたい。それも黒い画面を介さずに。もちろんオンプレミスの利点だってあるけど、どちらも知っておかないとね。インフラエンジニアとして。まだぜんぜん技術もないヤツが何いってんだって話だけどねwwww
+また来月にもJAWS-UG沖縄の勉強会があるらしいので、予定があいていれば参加したいです。いつかは僕もLTできるように頑張る！
+というか上手なブログの書き方がわからないorz
+かなりの駄文になりましたが、これで締めさせていただきますー♪</description>
+    </item>
+    
+    <item>
+      <title>Android端末用カメラアプリ『モノカム』をリリースしました。</title>
+      <link>http://blog.enokawa.co/2014/01/08/monocam/</link>
+      <pubDate>Wed, 08 Jan 2014 23:02:51 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2014/01/08/monocam/</guid>
+      <description>こんにちは。エノカワです。
+この度、Android端末用アプリ『モノカム』を公開いたしました。 単純に白黒の写真がとれるカメラアプリでございます。 とてもショボい作りになっていて、画面をタッチすると、白黒の写真が Android端末に保存されるというシンプルなアプリです。
+白黒の写真しか撮れません。
+ご了承ください。
+絶対売れないだろうなーww
+というか無料だけど。
+優しい人、ダウンロードしてください。
+https://play.google.com/store/apps/details?id=com.enokawa.cam</description>
+    </item>
+    
+    <item>
+      <title>【備忘録】githubへのコミット</title>
+      <link>http://blog.enokawa.co/2014/01/06/commit-to-github/</link>
+      <pubDate>Mon, 06 Jan 2014 02:07:57 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2014/01/06/commit-to-github/</guid>
+      <description>gitのローカルリポジトリからgithubへのコミット方法
+環境 MacBook Pro 13inch (Mid 2012) OS X 10.8.5 iTerm2
+まずローカルディレクトリに移動
+cd git/hoge/
+git 開始
+git init
+フォルダ以下全部追加
+git add *
+ローカルにコミット
+git commit -m &#39;first commit&#39;
+リモートレポジトリ originを追加
+git remote add origin https://github.com/user/hoge.git
+githubにpush
+git push origin master
+参考にしたサイト
+goryugo Hatena Diary
+http://d.hatena.ne.jp/goryugo/20081026/1225007428</description>
+    </item>
+    
+    <item>
+      <title>初めての投稿</title>
+      <link>http://blog.enokawa.co/2013/10/08/first/</link>
+      <pubDate>Tue, 08 Oct 2013 01:51:03 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2013/10/08/first/</guid>
+      <description>どうも。文系情報科の３年時エノカワです。
+趣味はDJ、一眼レフです。インフラ触るのが好きです。
+メインマシンはMacbook pro 13inchです。好きなエディタはVimです。
+iTerm, oh my zsh, vimの組み合わせが好きです。でも情弱です。
+あまり理解はできていません。
+最近、MacbookをLionからMountain Lionにアップデートする際に カーネルパニックを起こしてしまって修理に出したところ、原因は 「Mountain Lionに対応していないソフトがあるかも」とのこと。
+結局原因となるソフトは分からず&amp;hellip; パーティションを業者さんに区切ってもらい、データを移行した後にパーティションを １つにすると、できているのか分からない&amp;hellip; いろいろ試したけどダメだった。情弱卒業したいー。
+ディスクユーティリティをみてみるとこんな感じ。
+もうSSDに変えようかなー
+メモリも２G＊２だしwwww
+BTOするんだったorz
+10日は給料日だしSSD考えてみる。</description>
+    </item>
+    
+  </channel>
+</rss>

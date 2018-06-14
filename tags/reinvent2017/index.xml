@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Reinvent2017 on あしたから本気だす</title>
+    <link>http://blog.enokawa.co/tags/reinvent2017/</link>
+    <description>Recent content in Reinvent2017 on あしたから本気だす</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>ja-jp</language>
+    <lastBuildDate>Wed, 29 Nov 2017 18:09:58 +0900</lastBuildDate>
+    
+	<atom:link href="http://blog.enokawa.co/tags/reinvent2017/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>【re:Invent2017レポート】NetflixはパフォーマンスのためにどのようにEC2をチューニングしているか</title>
+      <link>http://blog.enokawa.co/2017/11/29/how-netflix-tunes-amazon-ec2-instances-for-performance/</link>
+      <pubDate>Wed, 29 Nov 2017 18:09:58 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2017/11/29/how-netflix-tunes-amazon-ec2-instances-for-performance/</guid>
+      <description>はじめに こんにちはえのかわです。下記のセッションレポートです。
+CMP325 - How Netflix Tunes Amazon EC2 Instances for Performance
+ インスタンスタイプの選定  Netflix の AWS 環境  AutoScalingを採用  30 ものインスタンスタイプを使い分けている  ファミリーは m4 / c5 / i3, d2 / r4, x1 / p2, g3, f1 medium から 16xlarge(以上) まで  インスタンス選択のフローチャート    全てのインスタンスタイプでロードテスト(スループット計測)を行っている  EC2 インスタンスの費用についても計測し、効率の良いインスタンスタイプを選定する インスタンス選定用のツールも自前で作成している    カーネルチューニング  Netflix では Ubuntu Linux を利用している  基本的なパフォーマンスチューニングを施しているベースの AMI を持っている  CPU スケジュール  # schedtool -B PID  仮想メモリ  vm.</description>
+    </item>
+    
+    <item>
+      <title>【re:Invent2017レポート】ExpediaにおけるAmazonElasticsearchServiceを用いたログ解析</title>
+      <link>http://blog.enokawa.co/2017/11/28/log-analytics-at-expedia-using-amazon-elasticsearch-service/</link>
+      <pubDate>Tue, 28 Nov 2017 07:17:52 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2017/11/28/log-analytics-at-expedia-using-amazon-elasticsearch-service/</guid>
+      <description>はじめに こんにちはえのかわです。下記のセッションレポートです。
+ABD331 - Log Analytics at Expedia Using Amazon Elasticsearch Service
+ Amazon Elasticsearch Service について まず AWS の Principal Product Manager である Carl Meadows 氏から簡単に Elasticsearch と Amazon Elasticsearch Service(以下ES)についての説明がありました。
+現在、機械的に生成されたデータは多い  手動による IT から DevOps への移行 IoT デバイス クラウドベースのアーキテクチャ  Elasticsearch のベネフィット  オープンソース 素早い価値創出  ELK Stack とは下記の 3 つをまとめたもの  Elasticsearch Logstash Kibana  Elasticsearch のユースケース  アプリケーションモニタリング と Root-cause Analysis(根本原因解析) Security Information and Event Management(SIEM) IoT &amp;amp; モバイル ビジネス &amp;amp; クリックストリーム分析  ES について  マネージド Elasticsearch + Kibana ベネフィット  オープンソース 簡単 スケーラブル セキュア 高可用性 他 AWS サービスとの連携   事例  Adobe Netflix など  Expedia における ES のユースケース Expedia の Kuldeep Chowhan(@this_is_kuldeep) 氏から Expedia のユースケースについて発表がありました。</description>
+    </item>
+    
+  </channel>
+</rss>

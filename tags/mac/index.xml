@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Mac on あしたから本気だす</title>
+    <link>http://blog.enokawa.co/tags/mac/</link>
+    <description>Recent content in Mac on あしたから本気だす</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>ja-jp</language>
+    <lastBuildDate>Sun, 06 Sep 2015 16:57:47 +0900</lastBuildDate>
+    
+	<atom:link href="http://blog.enokawa.co/tags/mac/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>VagrantでWordPress環境を作る（MacOSX編）</title>
+      <link>http://blog.enokawa.co/2015/09/06/vagrant-on-macos/</link>
+      <pubDate>Sun, 06 Sep 2015 16:57:47 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2015/09/06/vagrant-on-macos/</guid>
+      <description>はじめに こんにちは、えのかわです。
+今回の記事は自分用の備忘録です。WordPress環境の作成を目標に進めていきます。
+構成は以下のような感じです。
+ CentOS 6.5 Apache 2.2系 MySQL 5.1系 PHP 5.3系 WordPress 最新版  VirtualBoxのインストール VirtualBoxのダウンロードページ(Old Builds)からVirtual5.0をインストールします。最新バージョン(5.02)だとvagrant upでコケるみたいです。 環境にもよりますが、インストールに5分ほど時間かかります。 VirtualBox.pkjをダブルクリックしてウィザードに従って進めてください。 Vagrantのインストール Vagrantのダウンロードページからインストールします。 こちらもインストールに5分ほどかかります。VirtualBoxと同様に、ウィザードに従って進めていきます。 Boxのインストール OSのイメージであるBoxをインストールしてVagrantのセットアップを行います。まず適当なディレクトリを作成します。
+$ mkdir vagrant $ mkdir vagrant/CentOS65 $ cd vagrant/CentOS65  次にCentOS6.5のBoxをインストールします。
+Boxの一覧は、http://www.vagrantbox.es/ にあります。こちらも結構時間かかります。
+$ vagrant box add centos65 https://github.com/2creatives/vagrant-centos/releases/download/v6.5.3/centos65-x86_64-20140116.box ==&amp;gt; box: Box file was not detected as metadata. Adding it directly... ==&amp;gt; box: Adding box &#39;centos65&#39; (v0) for provider: box: Downloading: https://github.com/2creatives/vagrant-centos/releases/download/v6.5.3/centos65-x86_64-20140116.box ==&amp;gt; box: Successfully added box &#39;centos65&#39; (v0) for &#39;virtualbox&#39; !</description>
+    </item>
+    
+    <item>
+      <title>初めての投稿</title>
+      <link>http://blog.enokawa.co/2013/10/08/first/</link>
+      <pubDate>Tue, 08 Oct 2013 01:51:03 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2013/10/08/first/</guid>
+      <description>どうも。文系情報科の３年時エノカワです。
+趣味はDJ、一眼レフです。インフラ触るのが好きです。
+メインマシンはMacbook pro 13inchです。好きなエディタはVimです。
+iTerm, oh my zsh, vimの組み合わせが好きです。でも情弱です。
+あまり理解はできていません。
+最近、MacbookをLionからMountain Lionにアップデートする際に カーネルパニックを起こしてしまって修理に出したところ、原因は 「Mountain Lionに対応していないソフトがあるかも」とのこと。
+結局原因となるソフトは分からず&amp;hellip; パーティションを業者さんに区切ってもらい、データを移行した後にパーティションを １つにすると、できているのか分からない&amp;hellip; いろいろ試したけどダメだった。情弱卒業したいー。
+ディスクユーティリティをみてみるとこんな感じ。
+もうSSDに変えようかなー
+メモリも２G＊２だしwwww
+BTOするんだったorz
+10日は給料日だしSSD考えてみる。</description>
+    </item>
+    
+  </channel>
+</rss>

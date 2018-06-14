@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Route53 on あしたから本気だす</title>
+    <link>http://blog.enokawa.co/tags/route53/</link>
+    <description>Recent content in Route53 on あしたから本気だす</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>ja-jp</language>
+    <lastBuildDate>Wed, 07 Sep 2016 21:00:37 +0900</lastBuildDate>
+    
+	<atom:link href="http://blog.enokawa.co/tags/route53/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>特定のRoute53のHostedZoneのみの操作権限を与えたい</title>
+      <link>http://blog.enokawa.co/2016/09/07/specific-route53-hostedzone-change/</link>
+      <pubDate>Wed, 07 Sep 2016 21:00:37 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2016/09/07/specific-route53-hostedzone-change/</guid>
+      <description>はじめに こんにちは、えのかわです。
+特定のRoute53のHostedZoneのみを操作できるIAMユーザを作成したい場面があります。
+そのIAMポリシーを作成したのでメモです。
+HostedZoneの作成 まずRoute53が操作できる環境で２つのHostedZoneを作成します。 IAMユーザの作成 ポリシーは下記です。
+&amp;lt;HostedZoneID&amp;gt;に、そのIAMユーザに操作させたいHotedZoneのIDを記載します。
+今回は enokawa.me のHostedZoneIDを記載しました。
+{ &amp;quot;Version&amp;quot;: &amp;quot;2012-10-17&amp;quot;, &amp;quot;Statement&amp;quot;: [ { &amp;quot;Effect&amp;quot;: &amp;quot;Allow&amp;quot;, &amp;quot;Action&amp;quot;: [ &amp;quot;route53:ChangeResourceRecordSets&amp;quot;, &amp;quot;route53:GetHostedZone&amp;quot;, &amp;quot;route53:ListResourceRecordSets&amp;quot; ], &amp;quot;Resource&amp;quot;: &amp;quot;arn:aws:route53:::hostedzone/&amp;lt;HostedZoneID&amp;gt;&amp;quot; }, { &amp;quot;Effect&amp;quot;: &amp;quot;Allow&amp;quot;, &amp;quot;Action&amp;quot;: [ &amp;quot;route53:GetChange&amp;quot; ], &amp;quot;Resource&amp;quot;: &amp;quot;arn:aws:route53:::change/*&amp;quot; } ] }  検証 作成したIAMユーザでAWSマネージメントコンソールにログインし、Route53にアクセスします。
+権限エラーがでますね。 HostedZone一覧も閲覧できません。 下記の形式のURLでアクセスする必要があります。
+https://console.aws.amazon.com/route53/home?region=ap-northeast-1#resource-record-sets:&amp;lt;HostedZoneID&amp;gt;  enokawa.me のHostedZoneIDを指定してアクセスしてみましょう。 わぁい
+enokawa.org のHostedZoneIDを指定してアクセスすると何も表示されません。
+想定通りの挙動です。 以下の警告文が表示されます。
+ r53_user is not authorized to perform: route53:GetHostedZone on resource: hostedzone/HostedZoneID
+ ALIASレコードは設定できるのか 前述したIAMポリシーにはS3やELB、CloudFrontなどの参照権限が記載されていないので、Alias Targetに候補は出てきません。 が、存在するELBのエンドポイントをペーストしてレコードを登録してみると、、、 お？</description>
+    </item>
+    
+  </channel>
+</rss>

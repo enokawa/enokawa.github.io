@@ -1,0 +1,303 @@
+
+<!DOCTYPE html>
+<html lang="ja-jp">
+<head>
+
+  
+  <meta charset="UTF-8">
+  <title>
+    CentOS7にマイナーバージョンのMySQLをyumでインストールしたい | あしたから本気だす
+  </title>
+
+
+  
+  <meta name="viewport" content="width=device-width,user-scalable=no,maximum-scale=1,initial-scale=1">
+
+  
+  <link rel="canonical" href="http://blog.enokawa.co/2016/10/19/yum-install-minor-version-mysql-in-centos/"/>
+
+  
+  <link rel="stylesheet" href="/css/sanitize.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+  <link rel="stylesheet" href="/css/highlight_monokai.css">
+  <link rel="stylesheet" href="/css/theme.css">
+  <link rel="stylesheet" href="/css/custom.css">
+  
+  
+  <link href="http://blog.enokawa.co/index.xml" rel="alternate" type="application/rss+xml" title="あしたから本気だす" />
+  <link href="http://blog.enokawa.co/index.xml" rel="feed" type="application/rss+xml" title="あしたから本気だす" />
+
+  
+  
+
+
+</head>
+
+
+
+<body>
+<div class="container">
+
+  
+  <header role="banner">
+    <div class="row gutters">
+      <div id="site-title" class="col span_6">
+        <h1><a href="http://blog.enokawa.co/">あしたから本気だす</a></h1>
+        
+      </div>
+      <div id="social" class="col span_6">
+        <ul>
+          <li><a href="https://twitter.com/enkw_" target="_blank">Twitter</a></li>
+          <li><a href="https://facebook.com/naoto.enokawa" target="_blank">Facebook</a></li>
+          <li><a href="https://github.com/enokawa" target="_blank">GitHub</a></li>
+          
+        </ul>
+      </div>
+    </div>
+  </header>
+
+
+  
+  <main id="single" role="main">
+    <div class="article-header">
+      <h1>CentOS7にマイナーバージョンのMySQLをyumでインストールしたい</h1>
+      <div class="meta">
+        Oct 19, 2016 &nbsp;
+        
+          #<a href="/tags/centos">centos</a>&nbsp;
+        
+          #<a href="/tags/mysql">mysql</a>&nbsp;
+        
+      </div>
+    </div>
+    <article>
+      
+
+<h2 id="はじめに">はじめに</h2>
+
+<p>こんにちは、<a href="https://twitter.com/enkw_">えのかわ</a>です。<br />
+CentOSにMySQL5.7.11をyumでインストールしたい場面がありました。<br />
+今日（2016/10/19）時点では、最新版は5.7.16です。<br />
+rpmからインストールしようするとpostfixとmariadb-libsのコンフリクトが発生します。<br />
+<a href="http://butterfly-effect.hatenadiary.jp/entry/2015/12/19/215901">CentOS7 で MySQL と postfix を使いたいときの注意点</a></p>
+
+<h2 id="mysqlレポジトリのインストール">MySQLレポジトリのインストール</h2>
+
+<p>まず始めにMySQLレポのインストールです。</p>
+
+<pre><code>$ sudo yum install http://dev.mysql.com/get/mysql57-community-release-el7-7.noarch.rpm
+.
+.
+=====================================================================================================================================================================================================================
+ Package                                                  Arch                                  Version                                 Repository                                                              Size
+=====================================================================================================================================================================================================================
+Installing:
+ mysql57-community-release                                noarch                                el7-7                                   /mysql57-community-release-el7-7.noarch                                7.8 k
+
+Transaction Summary
+=====================================================================================================================================================================================================================
+Install  1 Package
+.
+.
+$ cat /etc/yum.repos.d/mysql-community.repo
+[mysql-connectors-community]
+name=MySQL Connectors Community
+baseurl=http://repo.mysql.com/yum/mysql-connectors-community/el/7/$basearch/
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-mysql
+
+[mysql-tools-community]
+name=MySQL Tools Community
+baseurl=http://repo.mysql.com/yum/mysql-tools-community/el/7/$basearch/
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-mysql
+
+# Enable to use MySQL 5.5
+[mysql55-community]
+name=MySQL 5.5 Community Server
+baseurl=http://repo.mysql.com/yum/mysql-5.5-community/el/7/$basearch/
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-mysql
+
+# Enable to use MySQL 5.6
+[mysql56-community]
+name=MySQL 5.6 Community Server
+baseurl=http://repo.mysql.com/yum/mysql-5.6-community/el/7/$basearch/
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-mysql
+
+[mysql57-community]
+name=MySQL 5.7 Community Server
+baseurl=http://repo.mysql.com/yum/mysql-5.7-community/el/7/$basearch/
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-mysql
+</code></pre>
+
+<h2 id="mysqlのインストール">MySQLのインストール</h2>
+
+<p>このまま普通にインストールすると最新のMySQL5.7.16がインストールされてしまいますが、今回はマイナーバージョンを指定してみます。<br />
+この時点でmariadb-libsはeraceされます。</p>
+
+<pre><code>$ sudo yum install mysql-community-client-5.7.11-1.el7
+=====================================================================================================================================================================================================================
+ Package                                                        Arch                                      Version                                         Repository                                            Size
+=====================================================================================================================================================================================================================
+Installing:
+ mysql-community-client                                         x86_64                                    5.7.11-1.el7                                    mysql57-community                                     25 M
+ mysql-community-libs                                           x86_64                                    5.7.11-1.el7                                    mysql57-community                                    2.2 M
+     replacing  mariadb-libs.x86_64 1:5.5.50-1.el7_2
+ mysql-community-libs-compat                                    x86_64                                    5.7.16-1.el7                                    mysql57-community                                    2.0 M
+     replacing  mariadb-libs.x86_64 1:5.5.50-1.el7_2
+Installing for dependencies:
+ mysql-community-common                                         x86_64                                    5.7.11-1.el7                                    mysql57-community                                    270 k
+
+Transaction Summary
+=====================================================================================================================================================================================================================
+Install  3 Packages (+1 Dependent package)
+.
+.
+Running transaction
+  Installing : mysql-community-common-5.7.11-1.el7.x86_64                                                                                                                                                        1/5
+  Installing : mysql-community-libs-5.7.11-1.el7.x86_64                                                                                                                                                          2/5
+  Installing : mysql-community-client-5.7.11-1.el7.x86_64                                                                                                                                                        3/5
+  Installing : mysql-community-libs-compat-5.7.16-1.el7.x86_64                                                                                                                                                   4/5
+  Erasing    : 1:mariadb-libs-5.5.50-1.el7_2.x86_64                                                                                                                                                              5/5
+  Verifying  : mysql-community-libs-5.7.11-1.el7.x86_64                                                                                                                                                          1/5
+  Verifying  : mysql-community-client-5.7.11-1.el7.x86_64                                                                                                                                                        2/5
+  Verifying  : mysql-community-common-5.7.11-1.el7.x86_64                                                                                                                                                        3/5
+  Verifying  : mysql-community-libs-compat-5.7.16-1.el7.x86_64                                                                                                                                                   4/5
+  Verifying  : 1:mariadb-libs-5.5.50-1.el7_2.x86_64                                                                                                                                                              5/5
+</code></pre>
+
+<p>続けてmysql-serverも</p>
+
+<pre><code>$ sudo yum install mysql-community-server-5.7.11-1.el7
+.
+.
+=====================================================================================================================================================================================================================
+ Package                                                   Arch                                      Version                                              Repository                                            Size
+=====================================================================================================================================================================================================================
+Installing:
+ mysql-community-server                                    x86_64                                    5.7.11-1.el7                                         mysql57-community                                    143 M
+Installing for dependencies:
+ libaio                                                    x86_64                                    0.3.109-13.el7                                       base                                                  24 k
+
+Transaction Summary
+=====================================================================================================================================================================================================================
+Install  1 Package (+1 Dependent package)
+.
+.
+</code></pre>
+
+<h2 id="mysqlの起動">MySQLの起動</h2>
+
+<p>問題なく起動できるか確認してみます。</p>
+
+<pre><code>$ sudo systemctl start mysqld
+$ systemctl status mysqld
+● mysqld.service - MySQL Server
+   Loaded: loaded (/usr/lib/systemd/system/mysqld.service; enabled; vendor preset: disabled)
+   Active: active (running) since Wed 2016-10-19 06:08:53 UTC; 18min ago
+  Process: 9589 ExecStart=/usr/sbin/mysqld --daemonize --pid-file=/var/run/mysqld/mysqld.pid $MYSQLD_OPTS (code=exited, status=0/SUCCESS)
+  Process: 9512 ExecStartPre=/usr/bin/mysqld_pre_systemd (code=exited, status=0/SUCCESS)
+ Main PID: 9593 (mysqld)
+   CGroup: /system.slice/mysqld.service
+           └─9593 /usr/sbin/mysqld --daemonize --pid-file=/var/run/mysqld/mysqld.pid
+
+Oct 19 06:08:46 ip-10-0-0-205 systemd[1]: Starting MySQL Server...
+Oct 19 06:08:53 ip-10-0-0-205 systemd[1]: Started MySQL Server.
+
+$ mysql -u root -p
+Enter password:
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 6
+Server version: 5.7.11 MySQL Community Server (GPL)
+
+Copyright (c) 2000, 2016, Oracle and/or its affiliates. All rights reserved.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql&gt;
+</code></pre>
+
+<h2 id="postfix生きてるかな">postfix生きてるかな、、、</h2>
+
+<pre><code>$ rpm -qa | grep postfix
+postfix-2.10.1-6.el7.x86_64
+</code></pre>
+
+<p>わぁい。</p>
+
+<h2 id="さいごに">さいごに</h2>
+
+<p>教えてくださった先輩に感謝です。</p>
+
+      
+      
+      
+    </article>
+    
+ <aside><div id="disqus_thread"></div></aside>
+
+<script type="text/javascript">
+     
+    var disqus_shortname = 'blog-enokawa-co';
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+
+
+
+  </main>
+  
+  <nav class="pagination-single">
+    
+      <span class="previous">&larr; <a href="http://blog.enokawa.co/2016/10/06/describe-rds-db-engine-versions/" rel="prev">RDSのDB Engineのバージョン一覧をAWS CLIで確認する</a></span>
+    
+    
+      <span class="next"><a href="http://blog.enokawa.co/2016/10/20/about-the-aws-codecommit-active-user/" rel="next">AWS CodeCommitのアクティブユーザについて</a> &rarr;</span>
+    
+  </nav>
+
+
+  
+  <footer role="contentinfo">
+    <div style="text-align:center;">
+      <img src="/images/profile.png" width="64" height="64"><br>
+      Written by Naoto Enokawa
+    </div>
+  </footer>
+
+
+</div>
+
+<script src="/js/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script>
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-64780065-1', 'auto');
+	ga('send', 'pageview');
+</script>
+
+</body>
+</html>
+

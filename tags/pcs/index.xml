@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Pcs on あしたから本気だす</title>
+    <link>http://blog.enokawa.co/tags/pcs/</link>
+    <description>Recent content in Pcs on あしたから本気だす</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>ja-jp</language>
+    <lastBuildDate>Thu, 27 Oct 2016 17:59:37 +0900</lastBuildDate>
+    
+	<atom:link href="http://blog.enokawa.co/tags/pcs/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>【pcs】特定リソースのmigration-thresholdを変更する</title>
+      <link>http://blog.enokawa.co/2016/10/27/set-specific-resource-the-migration-threshold-of-pcs/</link>
+      <pubDate>Thu, 27 Oct 2016 17:59:37 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2016/10/27/set-specific-resource-the-migration-threshold-of-pcs/</guid>
+      <description>はじめに こんにちは、えのかわです。
+Pacemaker/Corosyncで、特定リソースのmigration-thresholdを変更してみたのでメモです。
+基本的にはRed Hatのドキュメントを読めば理解できると思います。
+Red Hat Enterprise Linux 6 Pacemaker を使用した Red Hat High Availability Add-On の設定
+pcsのバージョンは下記。AmazonLinuxです。
+$ pcs --version 0.9.141  ざっくり 全体のmigration-thresholdは1で設定しています。
+今回はapacheリソースのみ2に変更してみます。
+$ sudo pcs resource defaults resource-stickiness: INFINITY migration-threshold: 1  migration-thresholdの変更
+$ sudo pcs resource meta apache migration-threshold=2  migration-thresholdの確認
+$ sudo pcs resource show apache Resource: apache (class=lsb type=apache) Meta Attrs: migration-threshold=2 Operations: start on-fail=restart interval=0s timeout=20s (apache-start-interval-0s) monitor on-fail=restart interval=60s timeout=60s (apache-monitor-interval-60s) stop on-fail=fence interval=0s timeout=20s (apache-stop-interval-0s)  migration-thresholdを2以上に変更した場合、failure-timeoutの変更も併せて必要になります。</description>
+    </item>
+    
+  </channel>
+</rss>

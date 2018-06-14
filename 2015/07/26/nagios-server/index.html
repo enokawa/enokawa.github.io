@@ -1,0 +1,296 @@
+
+<!DOCTYPE html>
+<html lang="ja-jp">
+<head>
+
+  
+  <meta charset="UTF-8">
+  <title>
+    CentOS6.6にNagiosサーバーをインストールする | あしたから本気だす
+  </title>
+
+
+  
+  <meta name="viewport" content="width=device-width,user-scalable=no,maximum-scale=1,initial-scale=1">
+
+  
+  <link rel="canonical" href="http://blog.enokawa.co/2015/07/26/nagios-server/"/>
+
+  
+  <link rel="stylesheet" href="/css/sanitize.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+  <link rel="stylesheet" href="/css/highlight_monokai.css">
+  <link rel="stylesheet" href="/css/theme.css">
+  <link rel="stylesheet" href="/css/custom.css">
+  
+  
+  <link href="http://blog.enokawa.co/index.xml" rel="alternate" type="application/rss+xml" title="あしたから本気だす" />
+  <link href="http://blog.enokawa.co/index.xml" rel="feed" type="application/rss+xml" title="あしたから本気だす" />
+
+  
+  
+
+
+</head>
+
+
+
+<body>
+<div class="container">
+
+  
+  <header role="banner">
+    <div class="row gutters">
+      <div id="site-title" class="col span_6">
+        <h1><a href="http://blog.enokawa.co/">あしたから本気だす</a></h1>
+        
+      </div>
+      <div id="social" class="col span_6">
+        <ul>
+          <li><a href="https://twitter.com/enkw_" target="_blank">Twitter</a></li>
+          <li><a href="https://facebook.com/naoto.enokawa" target="_blank">Facebook</a></li>
+          <li><a href="https://github.com/enokawa" target="_blank">GitHub</a></li>
+          
+        </ul>
+      </div>
+    </div>
+  </header>
+
+
+  
+  <main id="single" role="main">
+    <div class="article-header">
+      <h1>CentOS6.6にNagiosサーバーをインストールする</h1>
+      <div class="meta">
+        Jul 26, 2015 &nbsp;
+        
+          #<a href="/tags/nagios">nagios</a>&nbsp;
+        
+          #<a href="/tags/centos">centos</a>&nbsp;
+        
+          #<a href="/tags/aws">aws</a>&nbsp;
+        
+      </div>
+    </div>
+    <article>
+      
+
+<h2 id="はじめに">はじめに</h2>
+
+<p>こんばんは、インフラエンジニア見習いの<a href="https://twitter.com/enkw_">えのかわ</a>です。<br />
+Nagiosサーバーの構築をEC2上で行ったので、備忘録として残したいと思います。<br />
+この記事のゴールとしては、Nagiosサーバーから監視対象のサーバーに対してpingでの死活監視ができることとします。</p>
+
+<h2 id="nagiosのインストール">Nagiosのインストール</h2>
+
+<p>NagiosはEPELリポジトリに登録されているので、EPELレポジトリを追加しておきます。</p>
+
+<pre><code class="language-sh">$ sudo yum install epel-release
+$ sudo yum install nagios nagios-plugins-all
+</code></pre>
+
+<h2 id="アラートメールの設定">アラートメールの設定</h2>
+
+<p>Nagiosのアラートメールが送信されるアドレスを登録します。デフォルトの設定では<code>nagios@localhost</code>となっているので任意のメールアドレスを設定します。<br />
+念の為にconfigのバックアップをとっておきましょう。</p>
+
+<pre><code class="language-sh">$ sudo cp -p /etc/nagios/objects/contacts.cfg /etc/nagios/objects/contacts.cfg.sample
+$ sudo vi /etc/nagios/objects/contacts.cfg
+email                           enokawa@example.com;
+</code></pre>
+
+<h2 id="apacheの設定">Apacheの設定</h2>
+
+<p>続いてApacheの設定です。BASIC認証の設定をします。</p>
+
+<pre><code class="language-sh">$ sudo cp -p /etc/httpd/conf.d/nagios.conf /etc/httpd/conf.d/nagios.conf.sample
+$ sudo vi /etc/httpd/conf.d/nagios.conf
+ScriptAlias /nagios/cgi-bin/ &quot;/usr/lib64/nagios/cgi-bin/&quot;
+
+&lt;Directory &quot;/usr/lib64/nagios/cgi-bin/&quot;&gt;
+   Options ExecCGI
+   AllowOverride None
+   Order allow,deny
+   Allow from all
+   AuthName &quot;Nagios Access&quot;
+   AuthType Basic
+   AuthUserFile /etc/nagios/passwd
+   Require valid-user
+&lt;/Directory&gt;
+
+Alias /nagios &quot;/usr/share/nagios/html&quot;
+
+&lt;Directory &quot;/usr/share/nagios/html&quot;&gt;
+   Options None
+   AllowOverride None
+   Order allow,deny
+   Allow from all
+   AuthName &quot;Nagios Access&quot;
+   AuthType Basic
+   AuthUserFile /etc/nagios/passwd
+   Require valid-user
+&lt;/Directory&gt;
+</code></pre>
+
+<p>続けてベーシック認証のパスワードを設定します。</p>
+
+<pre><code class="language-sh">$ sudo htpasswd -c /etc/nagios/passwd nagiosadmin
+New password:&lt;任意のパスワードを入力&gt;
+Re-type new password:&lt;任意のパスワードを再度入力&gt;
+</code></pre>
+
+<h2 id="監視ホストの設定">監視ホストの設定</h2>
+
+<p>次に監視対象サーバーの設定です。新しく<code>remotehost.cfg</code>というファイルを作成しますので、<code>nagios.cfg</code>で定義しておきます。</p>
+
+<pre><code class="language-sh">$ sudo cp -p /etc/nagios/nagios.cfg /etc/nagios/nagios.cfg.sample
+$ sudo vi /etc/nagios/nagios.cfg
+cfg_file=/etc/nagios/objects/remotehost.cfg   #追加
+
+$ sudo vi /etc/nagios/objects/remotehost.cfg
+define host {
+    name                        remote-server
+    check_interval              10
+    retry_interval              1
+    max_check_attempts          5
+    notification_period         24x7
+    contact_groups              admins
+    register                    0
+}
+
+define host {
+    use                         remote-server
+    host_name                   &lt;監視対象ホストネーム&gt;
+    alias                       i-00000001(なんでもいい)
+    address                     &lt;監視対象IPアドレス&gt;
+}
+
+define hostgroup {
+    hostgroup_name              remote_servers
+    alias                       Remote Servers
+    members                     &lt;監視対象ホストネーム&gt;
+}
+
+define service {
+    use                         local-service
+    host_name                   &lt;監視対象ホストネーム&gt;
+    normal_check_interval       3
+    service_description         PING
+    check_command               check_ping!100.0,20%!500.0,60%
+}
+</code></pre>
+
+<p>※プラグインは<code>/usr/lib64/nagios/plugins/</code>配下にあります。</p>
+
+<h2 id="security-groupsを開ける">Security Groupsを開ける</h2>
+
+<p>Nagiosサーバーから監視対象サーバーに対してpingを打つので、監視対象サーバーのICMPポートを許可します。<br />
+また、Nagiosサーバーの80番ポートを許可するのも忘れずに行いましょう。</p>
+
+<h2 id="apache-nagiosサーバーのスタート">Apache、Nagiosサーバーのスタート</h2>
+
+<pre><code class="language-sh">$ sudo /etc/init.d/httpd start
+Starting httpd:                                            [  OK  ]
+$ sudo /etc/init.d/nagios start
+Starting nagios: done.
+$ sudo chkconfig httpd on
+$ sudo chkconfig nagios on
+</code></pre>
+
+<h2 id="nagiosの管理画面にアクセスしてみる">Nagiosの管理画面にアクセスしてみる</h2>
+
+<p>以下の情報でアクセスしてみましょう。</p>
+
+<ul>
+<li>URL：<a href="http://NagiosサーバのIP/nagios/">http://NagiosサーバのIP/nagios/</a></li>
+<li>ユーザ名：nagiosadmin</li>
+<li>パスワード：先ほど設定したパスワード</li>
+</ul>
+
+<p>TOPの<code>Host Groups</code>からホスト名<code>nagios-agent</code>のリンクをクリックします。
+<img src="/images/nagios-server1.png"></p>
+
+<p>このように表示されていたらOKです。
+<img src="/images/nagios-server2.png"></p>
+
+<h2 id="アラートが飛ぶことを確認する">アラートが飛ぶことを確認する</h2>
+
+<p>試しにSecutiry GroupsのICMPポートを閉じてみて、アラートメールが送信されることを確認してみましょう。<br />
+Nagiosの管理画面ではこのようなアラートがあがります。
+<img src="/images/nagios-server3.png"></p>
+
+<p>ちゃんとメールも飛んできてますね。
+<img src="/images/nagios-server4.png"></p>
+
+<p>復旧すると復旧した旨のメールが届きます。</p>
+
+<h2 id="おわりに">おわりに</h2>
+
+<p>次回は監視対象サーバーのログ監視を行いたいと思います。</p>
+
+<h2 id="参考">参考</h2>
+
+<ul>
+<li>CentOS 6.4にサーバ統合監視ツールのNagiosを使ってWEBサイトの死活監視する <a href="http://j-caw.co.jp/blog/?p=1125">http://j-caw.co.jp/blog/?p=1125</a></li>
+</ul>
+
+      
+      
+      
+    </article>
+    
+ <aside><div id="disqus_thread"></div></aside>
+
+<script type="text/javascript">
+     
+    var disqus_shortname = 'blog-enokawa-co';
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+
+
+
+  </main>
+  
+  <nav class="pagination-single">
+    
+      <span class="previous">&larr; <a href="http://blog.enokawa.co/2015/07/25/jawsug-beginner/" rel="prev">JAWS-UG初心者支部【第2回】懇親会でLTしてきました！！ #jawsug_bgnr</a></span>
+    
+    
+      <span class="next"><a href="http://blog.enokawa.co/2015/07/27/nagios-nrpe-checklog2/" rel="next">NagiosのNRPEプラグインを使ってログ監視をする</a> &rarr;</span>
+    
+  </nav>
+
+
+  
+  <footer role="contentinfo">
+    <div style="text-align:center;">
+      <img src="/images/profile.png" width="64" height="64"><br>
+      Written by Naoto Enokawa
+    </div>
+  </footer>
+
+
+</div>
+
+<script src="/js/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script>
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-64780065-1', 'auto');
+	ga('send', 'pageview');
+</script>
+
+</body>
+</html>
+

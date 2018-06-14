@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Heroku on あしたから本気だす</title>
+    <link>http://blog.enokawa.co/tags/heroku/</link>
+    <description>Recent content in Heroku on あしたから本気だす</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>ja-jp</language>
+    <lastBuildDate>Wed, 22 Jan 2014 00:28:28 +0900</lastBuildDate>
+    
+	<atom:link href="http://blog.enokawa.co/tags/heroku/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>【備忘録】herokuへのデプロイ</title>
+      <link>http://blog.enokawa.co/2014/01/22/deploy-to-heroku/</link>
+      <pubDate>Wed, 22 Jan 2014 00:28:28 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2014/01/22/deploy-to-heroku/</guid>
+      <description>備忘録として、ローカルで作成したrubyプログラムを
+herokuへデプロイしたのでそのログを。
+環境
+MacBook Pro 13inch (Mid 2012)
+OS X 10.8.5
+iTerm2
+まずはheroku-toolbeltなるものをインストール
+次にherokuをインストール
+sudo gem install heroku
+次にherokuにログイン
+heroku login
+次にSSH鍵を作り直す
+heroku keys:clear
+heroku keys:add
+次に簡単なsinatraアプリケーションを作成します。
+# app.rb require &#39;sinatra&#39; get &#39;/&#39; do &amp;quot;Hello World&amp;quot; end  # Gemfile source &#39;https://rubygems.org&#39; gem &#39;sinatra&#39;  # Procfile web: bundle exec backup config.ru -p $PORT  # config.ru $:.unshift(File.dirname(__FILE__)) require &amp;quot;sample&amp;quot; run Sample  # .gitignore .bandle  ローカルで起動
+foreman start</description>
+    </item>
+    
+  </channel>
+</rss>

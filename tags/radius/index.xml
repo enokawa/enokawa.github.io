@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Radius on あしたから本気だす</title>
+    <link>http://blog.enokawa.co/tags/radius/</link>
+    <description>Recent content in Radius on あしたから本気だす</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>ja-jp</language>
+    <lastBuildDate>Thu, 11 Jan 2018 22:18:02 +0900</lastBuildDate>
+    
+	<atom:link href="http://blog.enokawa.co/tags/radius/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>GoogleAuthenticatorを利用してAmazon WorkSpacesへ多要素認証ログインする</title>
+      <link>http://blog.enokawa.co/2018/01/11/login-to-amazon-workspaces-with-google-authenticator/</link>
+      <pubDate>Thu, 11 Jan 2018 22:18:02 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2018/01/11/login-to-amazon-workspaces-with-google-authenticator/</guid>
+      <description>はじめに えのかわです。
+Amazon WorkSpaces に多用素認証ログインするのに詰まったのでエントリ書きます。
+構成 ざっくりとこんな感じです。現時点(2018/01/12)で Simple AD だと MFA を利用した上での WorkSpaces ログインができないので Microsoft AD を使用しています。 手順 VPC の作成とかは省きます。
+DirectoryServiceの作成 作成には 20 分 〜 30 分ほど掛かります。
+$ aws ds create-microsoft-ad \ --name ad.enokawa.co \ --password xxxxxxxxxxxxxx \ --vpc-settings VpcId=vpc-xxxxxxx,SubnetIds=subnet-xxxxxxx,subnet-xxxxxxx { &amp;quot;DirectoryId&amp;quot;: &amp;quot;d-xxxxxxxxx&amp;quot; }  Directory の Status が Active になったら Register します。(Register する API が見つけられなかったけどないのかな、、、
+WorkSpaceの作成 CLI で作成する場合は WorkSpace 用のユーザが DirectoryService に存在している必要があります。DirectoryService にユーザを作成する場合は少し面倒なので公式ドキュメントを参考にポチポチで作成します。
+お客様の Amazon WorkSpace ( Your Amazon WorkSpace ) という件名でメールが AWS 側から送信されるので、メール本文に記載されている手順通りに進めます。専用のクライアントでログインを試みると、ユーザ名とパスワードが表示されます。これで普通にログインできます。 RADIUSインスタンスの設定 gist はります。hostnamectl コマンドでホスト名を設定しておいてください。</description>
+    </item>
+    
+  </channel>
+</rss>

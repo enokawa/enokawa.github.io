@@ -1,0 +1,281 @@
+
+<!DOCTYPE html>
+<html lang="ja-jp">
+<head>
+
+  
+  <meta charset="UTF-8">
+  <title>
+    【re:Invent2017レポート】ExpediaにおけるAmazonElasticsearchServiceを用いたログ解析 | あしたから本気だす
+  </title>
+
+
+  
+  <meta name="viewport" content="width=device-width,user-scalable=no,maximum-scale=1,initial-scale=1">
+
+  
+  <link rel="canonical" href="http://blog.enokawa.co/2017/11/28/log-analytics-at-expedia-using-amazon-elasticsearch-service/"/>
+
+  
+  <link rel="stylesheet" href="/css/sanitize.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+  <link rel="stylesheet" href="/css/highlight_monokai.css">
+  <link rel="stylesheet" href="/css/theme.css">
+  <link rel="stylesheet" href="/css/custom.css">
+  
+  
+  <link href="http://blog.enokawa.co/index.xml" rel="alternate" type="application/rss+xml" title="あしたから本気だす" />
+  <link href="http://blog.enokawa.co/index.xml" rel="feed" type="application/rss+xml" title="あしたから本気だす" />
+
+  
+  
+
+
+</head>
+
+
+
+<body>
+<div class="container">
+
+  
+  <header role="banner">
+    <div class="row gutters">
+      <div id="site-title" class="col span_6">
+        <h1><a href="http://blog.enokawa.co/">あしたから本気だす</a></h1>
+        
+      </div>
+      <div id="social" class="col span_6">
+        <ul>
+          <li><a href="https://twitter.com/enkw_" target="_blank">Twitter</a></li>
+          <li><a href="https://facebook.com/naoto.enokawa" target="_blank">Facebook</a></li>
+          <li><a href="https://github.com/enokawa" target="_blank">GitHub</a></li>
+          
+        </ul>
+      </div>
+    </div>
+  </header>
+
+
+  
+  <main id="single" role="main">
+    <div class="article-header">
+      <h1>【re:Invent2017レポート】ExpediaにおけるAmazonElasticsearchServiceを用いたログ解析</h1>
+      <div class="meta">
+        Nov 28, 2017 &nbsp;
+        
+          #<a href="/tags/aws">aws</a>&nbsp;
+        
+          #<a href="/tags/reinvent2017">reinvent2017</a>&nbsp;
+        
+          #<a href="/tags/elasticsearch">elasticsearch</a>&nbsp;
+        
+      </div>
+    </div>
+    <article>
+      
+
+<h2 id="はじめに">はじめに</h2>
+
+<p>こんにちは<a href="https://twitter.com/enkw_">えのかわ</a>です。下記のセッションレポートです。<br />
+<a href="https://www.portal.reinvent.awsevents.com/connect/sessionDetail.ww?SESSION_ID=16756">ABD331 - Log Analytics at Expedia Using Amazon Elasticsearch Service</a></p>
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/oJUpUQ_yNVw" frameborder="0" allowfullscreen></iframe>
+
+<h2 id="amazon-elasticsearch-service-について">Amazon Elasticsearch Service について</h2>
+
+<p>まず AWS の Principal Product Manager である <a href="https://www.portal.reinvent.awsevents.com/connect/speakerDetail.ww?PERSON_ID=30D17B8F99B3E8399A8147EA4A7CB6A2&amp;tclass=popup">Carl Meadows</a> 氏から簡単に Elasticsearch と Amazon Elasticsearch Service(以下ES)についての説明がありました。</p>
+
+<h3 id="現在-機械的に生成されたデータは多い">現在、機械的に生成されたデータは多い</h3>
+
+<ul>
+<li>手動による IT から DevOps への移行</li>
+<li>IoT デバイス</li>
+<li>クラウドベースのアーキテクチャ</li>
+</ul>
+
+<h3 id="elasticsearch-のベネフィット">Elasticsearch のベネフィット</h3>
+
+<ul>
+<li>オープンソース</li>
+<li>素早い価値創出</li>
+</ul>
+
+<h3 id="elk-stack-http-www-elastic-co-webinars-introduction-elk-stack-とは下記の-3-つをまとめたもの"><a href="http://www.elastic.co/webinars/introduction-elk-stack">ELK Stack</a> とは下記の 3 つをまとめたもの</h3>
+
+<ul>
+<li>Elasticsearch</li>
+<li>Logstash</li>
+<li>Kibana</li>
+</ul>
+
+<h3 id="elasticsearch-のユースケース">Elasticsearch のユースケース</h3>
+
+<ul>
+<li>アプリケーションモニタリング と Root-cause Analysis(根本原因解析)</li>
+<li>Security Information and Event Management(SIEM)</li>
+<li>IoT &amp; モバイル</li>
+<li>ビジネス &amp; クリックストリーム分析</li>
+</ul>
+
+<h3 id="es-について">ES について</h3>
+
+<ul>
+<li>マネージド Elasticsearch + Kibana</li>
+<li>ベネフィット
+
+<ul>
+<li>オープンソース</li>
+<li>簡単</li>
+<li>スケーラブル</li>
+<li>セキュア</li>
+<li>高可用性</li>
+<li>他 AWS サービスとの連携</li>
+</ul></li>
+</ul>
+
+<h3 id="事例-https-aws-amazon-com-jp-elasticsearch-service"><a href="https://aws.amazon.com/jp/elasticsearch-service/">事例</a></h3>
+
+<ul>
+<li>Adobe</li>
+<li>Netflix など</li>
+</ul>
+
+<h2 id="expedia-における-es-のユースケース">Expedia における ES のユースケース</h2>
+
+<p>Expedia の <a href="https://www.portal.reinvent.awsevents.com/connect/speakerDetail.ww?PERSON_ID=5266D16D84B66AB37CDF8C69E92B7631&amp;tclass=popup">Kuldeep Chowhan</a>(<a href="https://twitter.com/this_is_kuldeep">@this_is_kuldeep</a>) 氏から Expedia のユースケースについて発表がありました。</p>
+
+<h3 id="使用量">使用量</h3>
+
+<ul>
+<li>150 以上の ES クラスタ</li>
+<li>450 台以上の EC2</li>
+<li>300 万以上の ドキュメント</li>
+<li>30TB 以上のデータ</li>
+</ul>
+
+<h3 id="なぜ-es-を選んだか">なぜ ES を選んだか</h3>
+
+<ul>
+<li>セットアップが容易</li>
+<li>高可用性</li>
+<li>セキュア
+
+<ul>
+<li><a href="http://docs.aws.amazon.com/ja_jp/elasticsearch-service/latest/developerguide/es-createupdatedomains.html#es-createdomain-configure-access-policies">Elasticsearch access policy</a> で権限や接続元 IP などの制限が可能</li>
+</ul></li>
+<li>ディスクの拡張/タイプ変更が可能</li>
+<li>CloudWatch でのモニタリング &amp; バックアップの作成が容易</li>
+</ul>
+
+<h3 id="ログ解析のアーキテクチャ">ログ解析のアーキテクチャ</h3>
+
+<ul>
+<li>Docker startup logs to Elasticsearch Docker の起動ログ解析
+
+<ul>
+<li><code>ECS(agent / log driver) -&gt; Docker(log_driver) -&gt; fluentd -&gt; ES &lt;- Kibana</code></li>
+</ul></li>
+<li>AWS CloudTrail のログ解析
+
+<ul>
+<li><code>CloudTrail -&gt; S3 -&gt; SNS -&gt; Lambda -&gt; ES &lt;- Kibana</code></li>
+<li>Github にテンプレートを公開している: <a href="https://github.com/ExpediaDotCom/cloudtrail-log-analytics">ExpediaDotCom/cloudtrail-log-analytics</a></li>
+</ul></li>
+<li>CI/CD プラットフォームの KPI 解析
+
+<ul>
+<li><code>ruby app / node.js app -&gt; SNS -&gt; Lambda -&gt; ES &lt;- node.js app</code></li>
+</ul></li>
+<li>分散トレーシングのプラットフォーム解析
+
+<ul>
+<li><code>Microservices -&gt; java library -&gt; Kinesis &lt;- java app -&gt; kafka &lt;- java app -&gt; ES &lt;- nodejs app</code></li>
+</ul></li>
+</ul>
+
+<h3 id="まとめ">まとめ</h3>
+
+<ul>
+<li>ES Cluster がスケールすると同時にデータも同期される</li>
+<li>クラスタの監視と最適化が可能</li>
+<li>Elasticsearch のバージョンアップグレードができない
+
+<ul>
+<li>手動での移行が必要</li>
+</ul></li>
+<li>ディスクをどれだけ利用しているかがメトリクスから読み取りづらい</li>
+<li>ベネフィット
+
+<ul>
+<li>セットアップが容易</li>
+<li>高可用性</li>
+<li>セキュア</li>
+<li>モニタリング&amp;バックアップ可能</li>
+</ul></li>
+</ul>
+
+<h2 id="おわりに">おわりに</h2>
+
+<p>実は僕はまだ Elasticsearch や ES を使ったことがないので何とも言えないのですが、単にログを可視化するだけではなくそのログからどのような問題を見出す&amp;解決するかが重要だと感じました。当たり前かもですが。とりあえず触ってみます。あと<a href="https://dev.classmethod.jp/cloud/aws/loganalytics-at-expedia-using-amazones/">クラスメソッドさんの記事も出てました</a>。勉強になります。</p>
+
+      
+      
+      
+    </article>
+    
+ <aside><div id="disqus_thread"></div></aside>
+
+<script type="text/javascript">
+     
+    var disqus_shortname = 'blog-enokawa-co';
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+
+
+
+  </main>
+  
+  <nav class="pagination-single">
+    
+      <span class="previous">&larr; <a href="http://blog.enokawa.co/2017/10/13/best-practice-for-static-web-site-hosting-with-cloudfront-and-s3/" rel="prev">CloudFront&#43;S3で構成する静的ウェブサイトホスティングのベストプラクティス</a></span>
+    
+    
+      <span class="next"><a href="http://blog.enokawa.co/2017/11/29/how-netflix-tunes-amazon-ec2-instances-for-performance/" rel="next">【re:Invent2017レポート】NetflixはパフォーマンスのためにどのようにEC2をチューニングしているか</a> &rarr;</span>
+    
+  </nav>
+
+
+  
+  <footer role="contentinfo">
+    <div style="text-align:center;">
+      <img src="/images/profile.png" width="64" height="64"><br>
+      Written by Naoto Enokawa
+    </div>
+  </footer>
+
+
+</div>
+
+<script src="/js/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script>
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-64780065-1', 'auto');
+	ga('send', 'pageview');
+</script>
+
+</body>
+</html>
+

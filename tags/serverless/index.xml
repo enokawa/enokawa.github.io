@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Serverless on あしたから本気だす</title>
+    <link>http://blog.enokawa.co/tags/serverless/</link>
+    <description>Recent content in Serverless on あしたから本気だす</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>ja-jp</language>
+    <lastBuildDate>Wed, 14 Feb 2018 00:26:12 +0900</lastBuildDate>
+    
+	<atom:link href="http://blog.enokawa.co/tags/serverless/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Serverless FrameworkでEC2を定期的に起動/停止するdawnを公開しました</title>
+      <link>http://blog.enokawa.co/2018/02/14/dawn/</link>
+      <pubDate>Wed, 14 Feb 2018 00:26:12 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2018/02/14/dawn/</guid>
+      <description>はじめに こんにちはえのかわです。タイトルの通り、EC2 を定期的に起動/停止するツール、名付けて dawn をリリースしました。
+enokawa/dawn: Lambda function to automaticaly stop and start the EC2 instance.
+dawn?? dawn とは 夜明け、明け方 という意味です。名付け親は id:iga-ninja さんです。どうも良い名前が決まらなくて決めてもらいました。発音は dän, dôn だそうです。どぁ〜ん。
+きっかけ 業務のなかで、よく EC2 を定期的に停止/起動するケースがあるので、どうせなら Serverless Framework でと思い作成しました。けっこうありきたりですが、EC2 の費用削減にもなりますし僕も利用者の一人です。
+また、dawn は EC2 の AMI をスケジュールで取得する y13i/amirotate を参考にして作成しました。amirotate に限らず、y13i さんのレポジトリはすごく参考になります。
+おわりに 今回は単純なスクリプトですが、今後もガンガン Serverless Framework 使っていきます。何か要望などあれば Pull Request いただけると僕が喜びます。</description>
+    </item>
+    
+  </channel>
+</rss>

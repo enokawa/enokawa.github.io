@@ -1,0 +1,307 @@
+
+<!DOCTYPE html>
+<html lang="ja-jp">
+<head>
+
+  
+  <meta charset="UTF-8">
+  <title>
+    NagiosのCloudWatchプラグインをつくってみた(PHP) | あしたから本気だす
+  </title>
+
+
+  
+  <meta name="viewport" content="width=device-width,user-scalable=no,maximum-scale=1,initial-scale=1">
+
+  
+  <link rel="canonical" href="http://blog.enokawa.co/2015/07/29/nagios-check-cloudwatch/"/>
+
+  
+  <link rel="stylesheet" href="/css/sanitize.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+  <link rel="stylesheet" href="/css/highlight_monokai.css">
+  <link rel="stylesheet" href="/css/theme.css">
+  <link rel="stylesheet" href="/css/custom.css">
+  
+  
+  <link href="http://blog.enokawa.co/index.xml" rel="alternate" type="application/rss+xml" title="あしたから本気だす" />
+  <link href="http://blog.enokawa.co/index.xml" rel="feed" type="application/rss+xml" title="あしたから本気だす" />
+
+  
+  
+
+
+</head>
+
+
+
+<body>
+<div class="container">
+
+  
+  <header role="banner">
+    <div class="row gutters">
+      <div id="site-title" class="col span_6">
+        <h1><a href="http://blog.enokawa.co/">あしたから本気だす</a></h1>
+        
+      </div>
+      <div id="social" class="col span_6">
+        <ul>
+          <li><a href="https://twitter.com/enkw_" target="_blank">Twitter</a></li>
+          <li><a href="https://facebook.com/naoto.enokawa" target="_blank">Facebook</a></li>
+          <li><a href="https://github.com/enokawa" target="_blank">GitHub</a></li>
+          
+        </ul>
+      </div>
+    </div>
+  </header>
+
+
+  
+  <main id="single" role="main">
+    <div class="article-header">
+      <h1>NagiosのCloudWatchプラグインをつくってみた(PHP)</h1>
+      <div class="meta">
+        Jul 29, 2015 &nbsp;
+        
+          #<a href="/tags/nagios">nagios</a>&nbsp;
+        
+          #<a href="/tags/centos">centos</a>&nbsp;
+        
+          #<a href="/tags/aws">aws</a>&nbsp;
+        
+      </div>
+    </div>
+    <article>
+      
+
+<h2 id="はじめに">はじめに</h2>
+
+<p>タイトルは釣りです。ごめんなさい。笑<br />
+<a href="cloudpack.jp">cloudpack</a> CTOの<a href="https://twitter.com/suz_lab">@suz_lab</a>さんがAWS SDK for PHP v1で作成したスクリプトをv2に書き直してみました(本人には了承済みです)。
+<a href="/2015/07/27/nagios-nrpe-checklog2/">前回の記事</a>の続きで、今回はCloudWatchのプラグインを使ってEC2のリソースを監視してみたいと思います。</p>
+
+<h2 id="前提条件">前提条件</h2>
+
+<ul>
+<li>NagiosサーバーににCloudWatch ReadOnly権限のIAM Roleが適用されていること</li>
+<li>phpがインストールされていること</li>
+<li><a href="/2015/07/26/nagios-server/">Nagiosサーバーの構築</a>が済んでいること</li>
+</ul>
+
+<h2 id="aws-sdk-for-phpをインストール">AWS SDK for PHPをインストール</h2>
+
+<p>まずはじめにAWS SDK for PHP v2をインストールします。インストールする場所はお好きなディレクトリで。</p>
+
+<pre><code class="language-sh">$ cd /opt/
+$ sudo mkdir php-sdk2
+$ sudo cd php-sdk2
+$ sudo wget https://github.com/aws/aws-sdk-php/releases/download/2.8.14/aws.zip
+$ sudo unzip aws.zip
+$ sudo wget https://github.com/aws/aws-sdk-php/releases/download/2.8.14/aws.phar
+$ sudo vi composer.json  #新しく作成
+{
+    &quot;require&quot;: {
+        &quot;aws/aws-sdk-php&quot;: &quot;2.*&quot;
+    }
+}
+$ sudo curl -sS https://getcomposer.org/installer | php
+$ sudo php composer.phar install
+</code></pre>
+
+<h2 id="スクリプトの作成">スクリプトの作成</h2>
+
+<p><a href="http://blog.suz-lab.com/2011/12/nagioscloudwatchphp.html">@suz_labさんのスクリプト</a>をAWS SDK for PHP v2用に書き直します。</p>
+
+<pre><code class="language-php">$ sudo vim /usr/lib64/nagios/plugins/check_cloudwatch
+
+#!/usr/bin/php
+&lt;?php
+require_once(&quot;/opt/php-sdk2/vendor/autoload.php&quot;);
+
+// define status
+$ok       = array(&quot;code&quot; =&gt; 0, &quot;name&quot; =&gt; &quot;OK&quot;);
+$warning  = array(&quot;code&quot; =&gt; 1, &quot;name&quot; =&gt; &quot;WARNING&quot;);
+$critical = array(&quot;code&quot; =&gt; 2, &quot;name&quot; =&gt; &quot;CRITICAL&quot;);
+$unknown  = array(&quot;code&quot; =&gt; 3, &quot;name&quot; =&gt; &quot;UNKNOWN&quot;);
+
+// set option
+$option = getopt(&quot;c:w:f:r:n:m:s:u:d:v:&quot;);
+$critical_size = $option[&quot;c&quot;];
+$warning_size  = $option[&quot;w&quot;];
+$region        = $option[&quot;r&quot;];
+$namespace     = $option[&quot;n&quot;];
+$metrics       = $option[&quot;m&quot;];
+$statistics    = $option[&quot;s&quot;];
+$unit          = $option[&quot;u&quot;];
+$name          = $option[&quot;d&quot;];
+$value         = $option[&quot;v&quot;];
+
+// set location
+use Aws\CloudWatch\CloudWatchClient;
+date_default_timezone_set(&quot;Asia/Tokyo&quot;);
+
+// aws region
+$client = CloudWatchClient::factory(array(
+    'region' =&gt; $region
+));
+
+// get metric statistics
+@$result = $client-&gt;getMetricStatistics(array(
+    'Namespace' =&gt; $namespace,
+    'MetricName' =&gt; $metrics,
+    'Dimensions' =&gt; array(
+        array(
+            'Name' =&gt; $name,
+            'Value' =&gt; $value,
+        ),
+    ),
+    'StartTime' =&gt; strtotime('-10 minutes'),
+    'EndTime' =&gt; strtotime('now'),
+    'Period' =&gt; 300,
+    'Statistics' =&gt; array($statistics),
+));
+
+$data = (float)$result[&quot;Datapoints&quot;][0][&quot;$statistics&quot;];
+
+// check status
+if($data &gt; $critical_size) {
+    $status = $critical[&quot;code&quot;];
+} elseif($data &gt; $warning_size) {
+    $status = $warning[&quot;code&quot;];
+} elseif($data &gt; 0) {
+    $status = $ok[&quot;code&quot;];
+} else {
+    $status = $unknown[&quot;code&quot;];
+}
+
+// output status
+$output = &quot; - ${namespace} ${metrics} ${statistics} ${name} ${value}: ${data} ${unit};| data=${data};${warning_size};${critical_size};0;&quot;;
+switch($status) {
+    case $ok[&quot;code&quot;]:
+        print(&quot;CloudWatch &quot; . $ok[&quot;name&quot;]       . $output);
+        exit($ok[&quot;code&quot;]);
+    case $warning[&quot;code&quot;]:
+        print(&quot;CloudWatch &quot; . $warning[&quot;name&quot;]  . $output);
+        exit($warning[&quot;code&quot;]);
+    case $critical[&quot;code&quot;]:
+        print(&quot;CloudWatch &quot; . $critical[&quot;name&quot;] . $output);
+        exit($critical[&quot;code&quot;]);
+    case $unknown[&quot;code&quot;]:
+        print(&quot;CloudWatch &quot; . $unknown[&quot;name&quot;]  . $output);
+        exit($unknown[&quot;code&quot;]);
+}
+print(&quot;CloudWatch &quot; . $unknown[&quot;name&quot;] . $output);
+exit($unknown[&quot;code&quot;]);
+
+$ sudo chmod 755 /usr/lib64/nagios/plugins/check_cloudwatch
+</code></pre>
+
+<h2 id="実際にコマンドを打ってテストしてみる">実際にコマンドを打ってテストしてみる</h2>
+
+<p>コマンドを打ってみます。</p>
+
+<pre><code class="language-sh">$ /usr/lib64/nagios/plugins/check_cloudwatch -n AWS/EC2 -m CPUUtilization -s Average -u Percent -d InstanceId -r ap-northeast-1 -w 20 -c 20 -v i-00000001
+CloudWatch OK - AWS/EC2 CPUUtilization Average InstanceId i-00000001: 6.656 Percent;| data=6.656;20;20;0;
+</code></pre>
+
+<h2 id="commands-cfg-の設定"><code>commands.cfg</code>の設定</h2>
+
+<p><code>check_cloudwatch</code>コマンドを定義します。</p>
+
+<pre><code class="language-sh">$ sudo vi /etc/nagios/objects/commands.cfg
+define command{
+        command_name    check_ec2_cpu
+        command_line    $USER1$/check_cloudwatch -n AWS/EC2 -m CPUUtilization -s Average -u Percent -d InstanceId -r ap-northeast-1 -w $ARG1$ -c $ARG2$ -v $HOSTALIAS$
+      }
+</code></pre>
+
+<h2 id="remotehost-cfg-の設定"><code>remotehost.cfg</code>の設定</h2>
+
+<p>前回と同じ要領で<code>remotehost.cfg</code>に追記していきます。</p>
+
+<pre><code class="language-sh">$ sudo vi /etc/nagios/objects/remotehost.cfg
+define service{
+    use                         generic-service
+    host_name                   nagios-agent
+    normal_check_interval       3
+    service_description         CHECK-CPU
+    check_command               check_ec2_cpu!60!80!
+}
+</code></pre>
+
+<p>ちゃんと監視できてます！
+<img src="/images/nagios-check-cloudwatch.png"></p>
+
+<h2 id="さいごに">さいごに</h2>
+
+<p>RDSやELBのメトリクスを監視する際に少し工夫が必要になってくるのでその点を改善していきたいです。<br />
+また、前回の記事と同様に、NRPEを使って監視もできるので是非お試しを〜♪</p>
+
+<h2 id="参考">参考</h2>
+
+<ul>
+<li>aws/aws-sdk-php at 2.8 <a href="https://github.com/aws/aws-sdk-php/tree/2.8">https://github.com/aws/aws-sdk-php/tree/2.8</a></li>
+<li>suz-lab - blog: NagiosのCloudWatchプラグイン(PHP版) <a href="http://blog.suz-lab.com/2011/12/nagioscloudwatchphp.html">http://blog.suz-lab.com/2011/12/nagioscloudwatchphp.html</a></li>
+</ul>
+
+      
+      
+      
+    </article>
+    
+ <aside><div id="disqus_thread"></div></aside>
+
+<script type="text/javascript">
+     
+    var disqus_shortname = 'blog-enokawa-co';
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+
+
+
+  </main>
+  
+  <nav class="pagination-single">
+    
+      <span class="previous">&larr; <a href="http://blog.enokawa.co/2015/07/27/nagios-nrpe-checklog2/" rel="prev">NagiosのNRPEプラグインを使ってログ監視をする</a></span>
+    
+    
+      <span class="next"><a href="http://blog.enokawa.co/2015/08/09/skyhopper/" rel="next">DevOps採用システム自動構築ツール「SkyHopper」を使ってみた</a> &rarr;</span>
+    
+  </nav>
+
+
+  
+  <footer role="contentinfo">
+    <div style="text-align:center;">
+      <img src="/images/profile.png" width="64" height="64"><br>
+      Written by Naoto Enokawa
+    </div>
+  </footer>
+
+
+</div>
+
+<script src="/js/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script>
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-64780065-1', 'auto');
+	ga('send', 'pageview');
+</script>
+
+</body>
+</html>
+

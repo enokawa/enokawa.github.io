@@ -1,0 +1,279 @@
+
+<!DOCTYPE html>
+<html lang="ja-jp">
+<head>
+
+  
+  <meta charset="UTF-8">
+  <title>
+    AutoScalingからCloudWatchEvents(SSM)を呼ぶ | あしたから本気だす
+  </title>
+
+
+  
+  <meta name="viewport" content="width=device-width,user-scalable=no,maximum-scale=1,initial-scale=1">
+
+  
+  <link rel="canonical" href="http://blog.enokawa.co/2017/03/23/use-auto-scaling-lifecycle-hook-with-cloudwatch-events-ssm/"/>
+
+  
+  <link rel="stylesheet" href="/css/sanitize.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+  <link rel="stylesheet" href="/css/highlight_monokai.css">
+  <link rel="stylesheet" href="/css/theme.css">
+  <link rel="stylesheet" href="/css/custom.css">
+  
+  
+  <link href="http://blog.enokawa.co/index.xml" rel="alternate" type="application/rss+xml" title="あしたから本気だす" />
+  <link href="http://blog.enokawa.co/index.xml" rel="feed" type="application/rss+xml" title="あしたから本気だす" />
+
+  
+  
+
+
+</head>
+
+
+
+<body>
+<div class="container">
+
+  
+  <header role="banner">
+    <div class="row gutters">
+      <div id="site-title" class="col span_6">
+        <h1><a href="http://blog.enokawa.co/">あしたから本気だす</a></h1>
+        
+      </div>
+      <div id="social" class="col span_6">
+        <ul>
+          <li><a href="https://twitter.com/enkw_" target="_blank">Twitter</a></li>
+          <li><a href="https://facebook.com/naoto.enokawa" target="_blank">Facebook</a></li>
+          <li><a href="https://github.com/enokawa" target="_blank">GitHub</a></li>
+          
+        </ul>
+      </div>
+    </div>
+  </header>
+
+
+  
+  <main id="single" role="main">
+    <div class="article-header">
+      <h1>AutoScalingからCloudWatchEvents(SSM)を呼ぶ</h1>
+      <div class="meta">
+        Mar 23, 2017 &nbsp;
+        
+          #<a href="/tags/aws">aws</a>&nbsp;
+        
+          #<a href="/tags/autoscaling">autoscaling</a>&nbsp;
+        
+          #<a href="/tags/ssm">ssm</a>&nbsp;
+        
+          #<a href="/tags/cloudwatch">cloudwatch</a>&nbsp;
+        
+      </div>
+    </div>
+    <article>
+      
+
+<h2 id="はじめに">はじめに</h2>
+
+<p>ご無沙汰してます、<a href="https://twitter.com/enkw_">えのかわ</a>です。<br />
+先日、<a href="https://aws.amazon.com/jp/blogs/aws/ec2-run-command-is-now-a-cloudwatch-events-target/">CloudWatch Events の Target に SSM Run Command が追加されました</a>。<br />
+今回は、Auto Scaling の Lifecycle Hooks の <code>TERMINATING</code> をトリガーに、CloudWatch Events から SSM Run Commnad を呼んでみます。<code>LAUNCHING</code> に関しては、特に SSM を呼ぶ必要がなさそうなので、 User data を用いて初期設定を行います。</p>
+
+<p><img src="/images/as-flow.png"></p>
+
+<h2 id="autoscaling設定">AutoScaling設定</h2>
+
+<p>ざっと aws cli を流します。</p>
+
+<h4 id="launch-configuration作成">Launch Configuration作成</h4>
+
+<p>ベースとなる AMI には SSM Agent を導入している必要があります。今回の OS は AmazonLinux です。</p>
+
+<pre><code class="language-sh">$ aws autoscaling create-launch-configuration \
+--launch-configuration-name test-web-lc \
+--image-id ami-xxxxxx \
+--key-name enokawa-kensho \
+--security-groups sg-xxxxxxxx sg-xxxxxxxx \
+--user-data file://userdata.txt \
+--instance-type t2.micro \
+--block-device-mappings &quot;[{\&quot;DeviceName\&quot;: \&quot;/dev/xvda\&quot;,\&quot;Ebs\&quot;:{\&quot;VolumeSize\&quot;:100,\&quot;VolumeType\&quot;:\&quot;gp2\&quot;}}]&quot; \
+--iam-instance-profile web \
+--associate-public-ip-address
+
+$ cat userdata.txt
+#!/bin/bash
+
+# touch contents
+touch /var/www/html/index.html
+
+# complete auto scaling lifecycle
+INSTANCE_ID=`/usr/bin/curl -s 169.254.169.254/latest/meta-data/instance-id`
+aws autoscaling complete-lifecycle-action \
+--lifecycle-hook-name test-web-lh-launching \
+--auto-scaling-group-name test-web-asg \
+--lifecycle-action-result CONTINUE \
+--instance-id ${INSTANCE_ID}
+</code></pre>
+
+<h3 id="autoscaling-group作成">AutoScaling Group作成</h3>
+
+<p>Desired は 2 台、最高 4 台までスケールアウトします。<br />
+下記コマンド実行後には 2 台起動します。</p>
+
+<pre><code class="language-sh">$ aws autoscaling create-auto-scaling-group \
+--auto-scaling-group-name test-web-asg \
+--launch-configuration-name test-web-lc \
+--min-size 2 \
+--max-size 4 \
+--desired-capacity 2 \
+--default-cooldown 300 \
+--availability-zones &quot;ap-northeast-1a&quot; &quot;ap-northeast-1c&quot; \
+--load-balancer-names enokawa-me \
+--health-check-type EC2 \
+--health-check-grace-period 300 \
+--vpc-zone-identifier subnet-xxxxxxx,subnet-xxxxxxx \
+--tags ResourceId=test-web-asg,ResourceType=auto-scaling-group,Key=Name,Value=test-web,PropagateAtLaunch=true
+</code></pre>
+
+<h3 id="scaling-policies設定">Scaling Policies設定</h3>
+
+<p>こんな感じです。<br />
+ELB(enokawa-me) のリクエスト数が 100 以上なら 2 台追加、30 以下なら 2 台削除します。</p>
+
+<p><img src="/images/scaling-policies.png"></p>
+
+<h3 id="lifecycle-hook作成">Lifecycle hook作成</h3>
+
+<pre><code class="language-sh">aws autoscaling put-lifecycle-hook \
+--lifecycle-hook-name test-web-lh-launching \
+--auto-scaling-group-name test-web-asg \
+--lifecycle-transition autoscaling:EC2_INSTANCE_LAUNCHING \
+--heartbeat-timeout 1800 \
+--default-result ABANDON
+
+$ aws autoscaling put-lifecycle-hook \
+--lifecycle-hook-name test-web-lh-terminating \
+--auto-scaling-group-name test-web-asg \
+--lifecycle-transition autoscaling:EC2_INSTANCE_TERMINATING \
+--heartbeat-timeout 1800 \
+--default-result ABANDON
+</code></pre>
+
+<h3 id="cloudwatch-events-作成">CloudWatch Events 作成</h3>
+
+<p>いよいよ CloudWatch Events 作成です。
+<img src="/images/cloudwatch-rule.png">
+コマンドはこんな感じです。S3 に syslog を転送して、complete-lifecycle-action コマンドを実行後にサービスアウトする流れです。</p>
+
+<pre><code class="language-json">{
+  &quot;commands&quot;: [
+    &quot;INSTANCE_ID=`/usr/bin/curl -s 169.254.169.254/latest/meta-data/instance-id`&quot;,
+    &quot;aws s3 cp /var/log/messages s3://enokawa-logs/${INSTANCE_ID}/&quot;,
+    &quot;aws autoscaling complete-lifecycle-action --lifecycle-hook-name test-web-lh-terminating --auto-scaling-group-name test-web-asg --lifecycle-action-result CONTINUE --instance-id ${INSTANCE_ID}&quot;
+  ],
+  &quot;executionTimeout&quot;: [
+    &quot;600&quot;
+  ]
+}
+</code></pre>
+
+<h2 id="autoscaling実施">AutoScaling実施</h2>
+
+<p>俺たちの ApacheBench で ELB に対してリクエストを送ります。</p>
+
+<pre><code class="language-sh">$ ab -c 100 -n 100 http://enokawa-me-0123456789.ap-northeast-1.elb.amazonaws.com/
+</code></pre>
+
+<p><code>Pending</code> -&gt; <code>Pending:Wait</code> -&gt; <code>Pending:Proceed</code> -&gt; <code>InService</code> の順番で ELB に Service In しました。<br />
+スケールインのアラームが発砲するまでしばらく待ちます。
+<img src="/images/scaleout.png"></p>
+
+<p><code>Terminating</code> -&gt; <code>Terminating:Wait</code> -&gt; <code>Terminating:Proceed</code> -&gt; <code>Terminated</code> の順番でサービスアウトしました。
+<img src="/images/scalein.png"></p>
+
+<p>s3 の中身を見てみると、、、</p>
+
+<pre><code class="language-sh">as % aws s3 ls s3://enokawa-logs/
+                           PRE i-xxxxxxxxxxxxxx1/
+                           PRE i-xxxxxxxxxxxxxx2/
+                           PRE i-xxxxxxxxxxxxxx3/
+                           PRE i-xxxxxxxxxxxxxx4/
+</code></pre>
+
+<p>あれ？ 4 台分のログが転送されてますね。<br />
+Run Command の履歴をみてみると、4 台に対して <code>AWS-RunShellScript</code> が実行されたようです。<br />
+僕の妄想では、<code>Terminating:Wait</code> となっていて、かつ特定のタグを付与されているインスタンスに対して Run Command が実施されるはずでした。<br />
+CloudWatch Events の Event Source と Targets は別で考えた方がよさそうです。</p>
+
+<p>ということで、AutoScaling で <code>Terminating:Wait</code> となっているインスタンス<strong>のみ</strong>に SSM Run Command を実施する場合は Lambda を利用する必要がありそうです。<br />
+もっと良い方法をご存知の方は教えてください。。。Command で判断するパターンもありですかねぇ。</p>
+
+<h2 id="おわりに">おわりに</h2>
+
+<p>Lambda 作成する手間が省けたぞﾔｯﾀｰと喜んでいたのも束の間でした、、、<br />
+<code>Terminating:Wait</code> となっている instance-id を拾って、そのインスタンスに対して Run Command を実行する Lambda を書きたいと思います。できたらブログもかきます。</p>
+
+      
+      
+      
+    </article>
+    
+ <aside><div id="disqus_thread"></div></aside>
+
+<script type="text/javascript">
+     
+    var disqus_shortname = 'blog-enokawa-co';
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+
+
+
+  </main>
+  
+  <nav class="pagination-single">
+    
+      <span class="previous">&larr; <a href="http://blog.enokawa.co/2016/10/27/set-specific-resource-the-migration-threshold-of-pcs/" rel="prev">【pcs】特定リソースのmigration-thresholdを変更する</a></span>
+    
+    
+      <span class="next"><a href="http://blog.enokawa.co/2017/04/23/use-auto-scaling-lifecycle-hook-with-cloudwatch-events-lambda/" rel="next">AutoScalingからCloudWatchEvents(Lambda)を呼ぶ</a> &rarr;</span>
+    
+  </nav>
+
+
+  
+  <footer role="contentinfo">
+    <div style="text-align:center;">
+      <img src="/images/profile.png" width="64" height="64"><br>
+      Written by Naoto Enokawa
+    </div>
+  </footer>
+
+
+</div>
+
+<script src="/js/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script>
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-64780065-1', 'auto');
+	ga('send', 'pageview');
+</script>
+
+</body>
+</html>
+

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Codedeploy on あしたから本気だす</title>
+    <link>http://blog.enokawa.co/tags/codedeploy/</link>
+    <description>Recent content in Codedeploy on あしたから本気だす</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>ja-jp</language>
+    <lastBuildDate>Tue, 01 Sep 2015 20:56:17 +0900</lastBuildDate>
+    
+	<atom:link href="http://blog.enokawa.co/tags/codedeploy/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>AWS CodeDeployを使ってでデプロイを自動化してみた</title>
+      <link>http://blog.enokawa.co/2015/09/01/aws-codedeploy/</link>
+      <pubDate>Tue, 01 Sep 2015 20:56:17 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2015/09/01/aws-codedeploy/</guid>
+      <description>はじめに こんにちは、インフラエンジニア見習いのえのかわです。 今回は、AWS CodeDeployを使ってデプロイを自動化してみたのでログを残しておきます。 CodeDeployアプリケーションの作成は省略します。 下記のURLがとても参考になりました！
+ http://www.ryuzee.com/contents/blog/7022 http://dev.classmethod.jp/cloud/codedeploy-ataglance/  イメージ 図にするとこのような感じです。間違いがあったらご指摘ください。  クライアントPCからプロジェクトを圧縮してS3にアップロード クライアントからCodeDeployのAPIを叩いてEC2(CodeDeploy Agent)にメタデータを渡す CodeDeploy AgentがS3にポーリングする S3から圧縮されたファイルをダウンロードして展開する  AppSpec.ymlの作成 appspec.ymlは以下のような形です。AppSpecについては、クラスメソッドさんの記事が大変参考になりました。
+version: 0.0 os: linux files: - source: / destination: /var/www/html/ hooks: BeforeInstall: - location: scripts/install_dependencies timeout: 300 runas: root - location: scripts/start_server timeout: 300 runas: root ApplicationStop: - location: scripts/stop_server timeout: 300 runas: root  CodeDeployでプロジェクトをデプロイするには @ryuzeeさんのブログにも紹介されている通り、最終的には以下のコマンドを打たなければデプロイができません。(ポチポチでデプロイできるのかな？)
+deploy pushコマンドでプロジェクトのファイルをzipにしてS3にアップロードします。
+$ aws deploy push \ &amp;gt; --application-name CodeDeployTest \ &amp;gt; --s3-location s3://enokawa-test-bucket/app.</description>
+    </item>
+    
+  </channel>
+</rss>

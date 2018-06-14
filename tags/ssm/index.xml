@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Ssm on あしたから本気だす</title>
+    <link>http://blog.enokawa.co/tags/ssm/</link>
+    <description>Recent content in Ssm on あしたから本気だす</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>ja-jp</language>
+    <lastBuildDate>Sun, 23 Apr 2017 16:02:58 +0900</lastBuildDate>
+    
+	<atom:link href="http://blog.enokawa.co/tags/ssm/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>AutoScalingからCloudWatchEvents(Lambda)を呼ぶ</title>
+      <link>http://blog.enokawa.co/2017/04/23/use-auto-scaling-lifecycle-hook-with-cloudwatch-events-lambda/</link>
+      <pubDate>Sun, 23 Apr 2017 16:02:58 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2017/04/23/use-auto-scaling-lifecycle-hook-with-cloudwatch-events-lambda/</guid>
+      <description>はじめに ご無沙汰してます、えのかわです。先日投稿したエントリの続きです。
+今回は、Auto Scaling の Lifecycle Hooks の TERMINATING をトリガーに、CloudWatch Events から Lambda Function をキックして、SSM Run Commandを呼んでみます。
+ゴールはログを S3 に転送することとします。
+AutoScaling設定 前回のエントリと同様の AWS CLI を流します。
+Scaling Policies、Lifecycle hook の作成も併せて行います。
+Lambda Function作成 今回はせっかくなので Serverless Framework を用いて Lambda Function を作成します。 
+CloudWatch Events作成 CloudWatch Events の設定も Serverless Framework で行いたかったのですが何故か上手くいかず、、、しょうがなく GUI で設定しました。 ドキュメントはこちらです。
+AutoScaling実施 今回は Scale In Event のみ Execute します。
+Terminating -&amp;gt; Terminating:Wait -&amp;gt; Terminating:Proceed -&amp;gt; Terminated の順番でサービスアウトしました。 s3 の中身を見てみると、、、
+sls-autoscaling % aws s3 ls s3://enokawa-logs/ PRE i-xxxxxxxxxxxxxx1/ PRE i-xxxxxxxxxxxxxx2/  問題なくスケールインされたインスタンスのログのみ転送されてました。</description>
+    </item>
+    
+    <item>
+      <title>AutoScalingからCloudWatchEvents(SSM)を呼ぶ</title>
+      <link>http://blog.enokawa.co/2017/03/23/use-auto-scaling-lifecycle-hook-with-cloudwatch-events-ssm/</link>
+      <pubDate>Thu, 23 Mar 2017 14:17:24 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2017/03/23/use-auto-scaling-lifecycle-hook-with-cloudwatch-events-ssm/</guid>
+      <description>はじめに ご無沙汰してます、えのかわです。
+先日、CloudWatch Events の Target に SSM Run Command が追加されました。
+今回は、Auto Scaling の Lifecycle Hooks の TERMINATING をトリガーに、CloudWatch Events から SSM Run Commnad を呼んでみます。LAUNCHING に関しては、特に SSM を呼ぶ必要がなさそうなので、 User data を用いて初期設定を行います。
+AutoScaling設定 ざっと aws cli を流します。
+Launch Configuration作成 ベースとなる AMI には SSM Agent を導入している必要があります。今回の OS は AmazonLinux です。
+$ aws autoscaling create-launch-configuration \ --launch-configuration-name test-web-lc \ --image-id ami-xxxxxx \ --key-name enokawa-kensho \ --security-groups sg-xxxxxxxx sg-xxxxxxxx \ --user-data file://userdata.txt \ --instance-type t2.</description>
+    </item>
+    
+  </channel>
+</rss>

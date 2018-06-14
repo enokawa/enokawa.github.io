@@ -1,0 +1,231 @@
+
+<!DOCTYPE html>
+<html lang="ja-jp">
+<head>
+
+  
+  <meta charset="UTF-8">
+  <title>
+    AWS CodeDeployを使ってでデプロイを自動化してみた | あしたから本気だす
+  </title>
+
+
+  
+  <meta name="viewport" content="width=device-width,user-scalable=no,maximum-scale=1,initial-scale=1">
+
+  
+  <link rel="canonical" href="http://blog.enokawa.co/2015/09/01/aws-codedeploy/"/>
+
+  
+  <link rel="stylesheet" href="/css/sanitize.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+  <link rel="stylesheet" href="/css/highlight_monokai.css">
+  <link rel="stylesheet" href="/css/theme.css">
+  <link rel="stylesheet" href="/css/custom.css">
+  
+  
+  <link href="http://blog.enokawa.co/index.xml" rel="alternate" type="application/rss+xml" title="あしたから本気だす" />
+  <link href="http://blog.enokawa.co/index.xml" rel="feed" type="application/rss+xml" title="あしたから本気だす" />
+
+  
+  
+
+
+</head>
+
+
+
+<body>
+<div class="container">
+
+  
+  <header role="banner">
+    <div class="row gutters">
+      <div id="site-title" class="col span_6">
+        <h1><a href="http://blog.enokawa.co/">あしたから本気だす</a></h1>
+        
+      </div>
+      <div id="social" class="col span_6">
+        <ul>
+          <li><a href="https://twitter.com/enkw_" target="_blank">Twitter</a></li>
+          <li><a href="https://facebook.com/naoto.enokawa" target="_blank">Facebook</a></li>
+          <li><a href="https://github.com/enokawa" target="_blank">GitHub</a></li>
+          
+        </ul>
+      </div>
+    </div>
+  </header>
+
+
+  
+  <main id="single" role="main">
+    <div class="article-header">
+      <h1>AWS CodeDeployを使ってでデプロイを自動化してみた</h1>
+      <div class="meta">
+        Sep 1, 2015 &nbsp;
+        
+          #<a href="/tags/aws">aws</a>&nbsp;
+        
+          #<a href="/tags/codedeploy">codedeploy</a>&nbsp;
+        
+      </div>
+    </div>
+    <article>
+      
+
+<h2 id="はじめに">はじめに</h2>
+
+<p>こんにちは、インフラエンジニア見習いの<a href="https://twitter.com/enkw_">えのかわ</a>です。
+今回は、AWS CodeDeployを使ってデプロイを自動化してみたのでログを残しておきます。
+CodeDeployアプリケーションの作成は省略します。
+下記のURLがとても参考になりました！</p>
+
+<ul>
+<li><a href="http://www.ryuzee.com/contents/blog/7022">http://www.ryuzee.com/contents/blog/7022</a></li>
+<li><a href="http://dev.classmethod.jp/cloud/codedeploy-ataglance/">http://dev.classmethod.jp/cloud/codedeploy-ataglance/</a></li>
+</ul>
+
+<h2 id="イメージ">イメージ</h2>
+
+<p>図にするとこのような感じです。間違いがあったらご指摘ください。
+<img src="/images/aws-codedeploy1.png"></p>
+
+<ol>
+<li>クライアントPCからプロジェクトを圧縮してS3にアップロード</li>
+<li>クライアントからCodeDeployのAPIを叩いてEC2(CodeDeploy Agent)にメタデータを渡す</li>
+<li>CodeDeploy AgentがS3にポーリングする</li>
+<li>S3から圧縮されたファイルをダウンロードして展開する</li>
+</ol>
+
+<h2 id="appspec-ymlの作成">AppSpec.ymlの作成</h2>
+
+<p><code>appspec.yml</code>は以下のような形です。AppSpecについては、<a href="http://dev.classmethod.jp/cloud/aws/code-deploy-appspec/">クラスメソッドさんの記事</a>が大変参考になりました。</p>
+
+<pre><code>version: 0.0
+os: linux
+files:
+  - source: /
+    destination: /var/www/html/
+hooks:
+  BeforeInstall:
+    - location: scripts/install_dependencies
+      timeout: 300
+      runas: root
+    - location: scripts/start_server
+      timeout: 300
+      runas: root
+  ApplicationStop:
+    - location: scripts/stop_server
+      timeout: 300
+      runas: root
+</code></pre>
+
+<h2 id="codedeployでプロジェクトをデプロイするには">CodeDeployでプロジェクトをデプロイするには</h2>
+
+<p><a href="http://twitter.com/ryuzee">@ryuzee</a>さんの<a href="http://www.ryuzee.com/contents/blog/7022">ブログ</a>にも紹介されている通り、最終的には以下のコマンドを打たなければデプロイができません。(ポチポチでデプロイできるのかな？)</p>
+
+<p><code>deploy push</code>コマンドでプロジェクトのファイルをzipにしてS3にアップロードします。</p>
+
+<pre><code class="language-sh">$ aws deploy push \
+&gt;  --application-name CodeDeployTest \
+&gt;  --s3-location s3://enokawa-test-bucket/app.zip \
+&gt;  --source ./ \
+&gt;  --region ap-northeast-1
+To deploy with this revision, run:
+aws deploy create-deployment --application-name CodeDeployTest --s3-location bucket=enokawa-test-bucket,key=app.zip,bundleType=zip,eTag=&quot;XXXXXXXXXXXXXXXXXXXXXXXXX&quot; --deployment-group-name &lt;deployment-group-name&gt; --deployment-config-name &lt;deployment-config-name&gt; --description &lt;description&gt;
+</code></pre>
+
+<p><code>deploy create-deployment</code>コマンドでDeploymentGroupのEC2にデプロイする。</p>
+
+<pre><code class="language-sh">$ aws deploy create-deployment \
+&gt;   --application-name CodeDeployTest \
+&gt;   --s3-location bucket=enokawa-test-bucket,key=key=app.zip,bundleType=zip,eTag=&quot;XXXXXXXXXXXXXXXXXXXXXXXXX&quot; \
+&gt;   --deployment-group-name CodeDeployTest \
+&gt;   --region ap-northeast-1
+{
+    &quot;deploymentId&quot;: &quot;d-XXXXXXXXX&quot;
+}
+</code></pre>
+
+<h2 id="シェルスクリプトの作成">シェルスクリプトの作成</h2>
+
+<p>毎回このコマンドを打つのは面倒なのでシェルスクリプトにしてみました。
+例外処理などは書いていないです。ツッコミなどある方はgistに直接コメントするか、<a href="https://twitter.com/enkw_">Twitter</a>でメンション下さると嬉しいです！
+<script src="https://gist.github.com/enokawa/ff873740c702e5dd6634.js"></script></p>
+
+<h2 id="デプロイの流れ">デプロイの流れ</h2>
+
+<p>以下の流れでデプロイができたら理想的だなと思いました。</p>
+
+<ol>
+<li>ファイルを修正する</li>
+<li>ローカルで正しく修正されているかを確認する</li>
+<li>Gitでコミット/プッシュする</li>
+<li><code>deploy.sh</code>実行</li>
+<li>反映されているか確認</li>
+</ol>
+
+<h2 id="おわりに">おわりに</h2>
+
+<p>AWS CodeDeployを用いることで、今までのデプロイ作業が少し楽になるかもしれません。Githubとの連携も可能らしいので、今後試してみたいと思います。</p>
+
+      
+      
+      
+    </article>
+    
+ <aside><div id="disqus_thread"></div></aside>
+
+<script type="text/javascript">
+     
+    var disqus_shortname = 'blog-enokawa-co';
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+
+
+
+  </main>
+  
+  <nav class="pagination-single">
+    
+      <span class="previous">&larr; <a href="http://blog.enokawa.co/2015/08/09/skyhopper/" rel="prev">DevOps採用システム自動構築ツール「SkyHopper」を使ってみた</a></span>
+    
+    
+      <span class="next"><a href="http://blog.enokawa.co/2015/09/06/vagrant-on-macos/" rel="next">VagrantでWordPress環境を作る（MacOSX編）</a> &rarr;</span>
+    
+  </nav>
+
+
+  
+  <footer role="contentinfo">
+    <div style="text-align:center;">
+      <img src="/images/profile.png" width="64" height="64"><br>
+      Written by Naoto Enokawa
+    </div>
+  </footer>
+
+
+</div>
+
+<script src="/js/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script>
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-64780065-1', 'auto');
+	ga('send', 'pageview');
+</script>
+
+</body>
+</html>
+

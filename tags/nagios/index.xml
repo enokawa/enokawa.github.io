@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Nagios on あしたから本気だす</title>
+    <link>http://blog.enokawa.co/tags/nagios/</link>
+    <description>Recent content in Nagios on あしたから本気だす</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>ja-jp</language>
+    <lastBuildDate>Wed, 29 Jul 2015 23:17:11 +0900</lastBuildDate>
+    
+	<atom:link href="http://blog.enokawa.co/tags/nagios/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>NagiosのCloudWatchプラグインをつくってみた(PHP)</title>
+      <link>http://blog.enokawa.co/2015/07/29/nagios-check-cloudwatch/</link>
+      <pubDate>Wed, 29 Jul 2015 23:17:11 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2015/07/29/nagios-check-cloudwatch/</guid>
+      <description>はじめに タイトルは釣りです。ごめんなさい。笑
+cloudpack CTOの@suz_labさんがAWS SDK for PHP v1で作成したスクリプトをv2に書き直してみました(本人には了承済みです)。 前回の記事の続きで、今回はCloudWatchのプラグインを使ってEC2のリソースを監視してみたいと思います。
+前提条件  NagiosサーバーににCloudWatch ReadOnly権限のIAM Roleが適用されていること phpがインストールされていること Nagiosサーバーの構築が済んでいること  AWS SDK for PHPをインストール まずはじめにAWS SDK for PHP v2をインストールします。インストールする場所はお好きなディレクトリで。
+$ cd /opt/ $ sudo mkdir php-sdk2 $ sudo cd php-sdk2 $ sudo wget https://github.com/aws/aws-sdk-php/releases/download/2.8.14/aws.zip $ sudo unzip aws.zip $ sudo wget https://github.com/aws/aws-sdk-php/releases/download/2.8.14/aws.phar $ sudo vi composer.json #新しく作成 { &amp;quot;require&amp;quot;: { &amp;quot;aws/aws-sdk-php&amp;quot;: &amp;quot;2.*&amp;quot; } } $ sudo curl -sS https://getcomposer.org/installer | php $ sudo php composer.</description>
+    </item>
+    
+    <item>
+      <title>NagiosのNRPEプラグインを使ってログ監視をする</title>
+      <link>http://blog.enokawa.co/2015/07/27/nagios-nrpe-checklog2/</link>
+      <pubDate>Mon, 27 Jul 2015 21:06:43 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2015/07/27/nagios-nrpe-checklog2/</guid>
+      <description>はじめに こんばんは、インフラエンジニア見習いのえのかわです。
+前回の記事の続きです。今回は監視対象のログ監視をしたいと思います。
+NRPE is 何 NRPE(Nagios Remote Plugin Executor)とは、監視対象サーバーに対して以下のような監視を実現したい時に用います。前回の記事ではpingを打つだけなのでNRPEは必要ではありませんでした。
+ ディスク監視 CPU使用率の監視 メモリ使用率の監視 ログ監視  NRPEのインストール（Nagiosサーバー） それではさっそく設定していきます。まずはじめにNagiosサーバーにNRPE関連のパッケージをインストールします。 /usr/lib64/nagios/plugins/配下にcheck_nrpeというファイルがインストールされます。
+$ sudo yum install nrpe nagios-plugins-nrpe  インストールしたcheck_nrpeコマンドを登録します。
+$ sudo vi /etc/nagios/objects/commands.cfg define command{ command_name check_nrpe command_line $USER1$/check_nrpe -H $HOSTADDRESS$ -c $ARG1$ }  NRPEのインストールと設定（監視対象サーバ） つづいて監視対象サーバに、NRPE関連のパッケージをインストールします。
+$ sudo yum install -y epel-release $ sudo yum install nrpe nagios-plugins-nrpe nagios-plugins-all  nrpe.cfgに設定を書いていきます。Nagiosサーバーからのアクセスを許可します。
+$ sudo cp -p /etc/nagios/nrpe.cfg.sample $ sudo vi /etc/nagios/nrpe.cfg allowed_hosts=127.</description>
+    </item>
+    
+    <item>
+      <title>CentOS6.6にNagiosサーバーをインストールする</title>
+      <link>http://blog.enokawa.co/2015/07/26/nagios-server/</link>
+      <pubDate>Sun, 26 Jul 2015 21:06:45 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2015/07/26/nagios-server/</guid>
+      <description>はじめに こんばんは、インフラエンジニア見習いのえのかわです。
+Nagiosサーバーの構築をEC2上で行ったので、備忘録として残したいと思います。
+この記事のゴールとしては、Nagiosサーバーから監視対象のサーバーに対してpingでの死活監視ができることとします。
+Nagiosのインストール NagiosはEPELリポジトリに登録されているので、EPELレポジトリを追加しておきます。
+$ sudo yum install epel-release $ sudo yum install nagios nagios-plugins-all  アラートメールの設定 Nagiosのアラートメールが送信されるアドレスを登録します。デフォルトの設定ではnagios@localhostとなっているので任意のメールアドレスを設定します。
+念の為にconfigのバックアップをとっておきましょう。
+$ sudo cp -p /etc/nagios/objects/contacts.cfg /etc/nagios/objects/contacts.cfg.sample $ sudo vi /etc/nagios/objects/contacts.cfg email enokawa@example.com;  Apacheの設定 続いてApacheの設定です。BASIC認証の設定をします。
+$ sudo cp -p /etc/httpd/conf.d/nagios.conf /etc/httpd/conf.d/nagios.conf.sample $ sudo vi /etc/httpd/conf.d/nagios.conf ScriptAlias /nagios/cgi-bin/ &amp;quot;/usr/lib64/nagios/cgi-bin/&amp;quot; &amp;lt;Directory &amp;quot;/usr/lib64/nagios/cgi-bin/&amp;quot;&amp;gt; Options ExecCGI AllowOverride None Order allow,deny Allow from all AuthName &amp;quot;Nagios Access&amp;quot; AuthType Basic AuthUserFile /etc/nagios/passwd Require valid-user &amp;lt;/Directory&amp;gt; Alias /nagios &amp;quot;/usr/share/nagios/html&amp;quot; &amp;lt;Directory &amp;quot;/usr/share/nagios/html&amp;quot;&amp;gt; Options None AllowOverride None Order allow,deny Allow from all AuthName &amp;quot;Nagios Access&amp;quot; AuthType Basic AuthUserFile /etc/nagios/passwd Require valid-user &amp;lt;/Directory&amp;gt;  続けてベーシック認証のパスワードを設定します。</description>
+    </item>
+    
+  </channel>
+</rss>

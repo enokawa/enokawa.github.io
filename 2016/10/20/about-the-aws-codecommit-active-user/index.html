@@ -1,0 +1,160 @@
+
+<!DOCTYPE html>
+<html lang="ja-jp">
+<head>
+
+  
+  <meta charset="UTF-8">
+  <title>
+    AWS CodeCommitのアクティブユーザについて | あしたから本気だす
+  </title>
+
+
+  
+  <meta name="viewport" content="width=device-width,user-scalable=no,maximum-scale=1,initial-scale=1">
+
+  
+  <link rel="canonical" href="http://blog.enokawa.co/2016/10/20/about-the-aws-codecommit-active-user/"/>
+
+  
+  <link rel="stylesheet" href="/css/sanitize.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+  <link rel="stylesheet" href="/css/highlight_monokai.css">
+  <link rel="stylesheet" href="/css/theme.css">
+  <link rel="stylesheet" href="/css/custom.css">
+  
+  
+  <link href="http://blog.enokawa.co/index.xml" rel="alternate" type="application/rss+xml" title="あしたから本気だす" />
+  <link href="http://blog.enokawa.co/index.xml" rel="feed" type="application/rss+xml" title="あしたから本気だす" />
+
+  
+  
+
+
+</head>
+
+
+
+<body>
+<div class="container">
+
+  
+  <header role="banner">
+    <div class="row gutters">
+      <div id="site-title" class="col span_6">
+        <h1><a href="http://blog.enokawa.co/">あしたから本気だす</a></h1>
+        
+      </div>
+      <div id="social" class="col span_6">
+        <ul>
+          <li><a href="https://twitter.com/enkw_" target="_blank">Twitter</a></li>
+          <li><a href="https://facebook.com/naoto.enokawa" target="_blank">Facebook</a></li>
+          <li><a href="https://github.com/enokawa" target="_blank">GitHub</a></li>
+          
+        </ul>
+      </div>
+    </div>
+  </header>
+
+
+  
+  <main id="single" role="main">
+    <div class="article-header">
+      <h1>AWS CodeCommitのアクティブユーザについて</h1>
+      <div class="meta">
+        Oct 20, 2016 &nbsp;
+        
+          #<a href="/tags/aws">aws</a>&nbsp;
+        
+          #<a href="/tags/codecommit">codecommit</a>&nbsp;
+        
+      </div>
+    </div>
+    <article>
+      
+
+<h2 id="はじめに">はじめに</h2>
+
+<p>こんにちは、<a href="https://twitter.com/enkw_">えのかわ</a>です。<br />
+CodeCommitのアクティブユーザの定義について意味を理解していなかったので懺悔します。</p>
+
+<h2 id="甘かった僕の認識">甘かった僕の認識</h2>
+
+<p><code>最初の 5 人のアクティブユーザー*は無料」</code>という表示で、「あっ、5つのIAMユーザまでは無料なんだ」と勘違いしていました。  しかし実際のドキュメントの内容は下記で、完璧に意味を履き違えていました。</p>
+
+<blockquote>
+<ul>
+<li>アクティブユーザーとは、その月に Git リクエストまたは AWS マネジメントコンソールを使用して AWS CodeCommit リポジトリにアクセスする、すべての固有の AWS Identity (IAM ユーザー、IAM ロール、フェデレーティッドユーザー、ルートアカウント) を指します。一意の AWS アイデンティティを使用して CodeCommit にアクセスするサーバーは、アクティブなユーザーとみなされます。その月に AWS CodeCommit にアクセスしていないユーザーに対しては料金が発生しません。ストレージには、リポジトリのデータを保持するために必要な容量全体が含まれます。</li>
+</ul>
+</blockquote>
+
+<p>料金 - Amazon CodeCommit | AWS  <a href="https://aws.amazon.com/jp/codecommit/pricing/">https://aws.amazon.com/jp/codecommit/pricing/</a></p>
+
+<h2 id="ということは">ということは</h2>
+
+<p>例えば5つのクライアントPCで同じIAMユーザ(SSH Key ID)を利用(Pull or Push)した場合、5アクティブユーザとしてみなされます。  僕の場合、1台のクライアントPCでPushやPullを行い、6台のEC2でpullのみを行いました。その結果<code>additional CodeCommit user: 2 User-Month</code>としてみなされました。</p>
+
+<h2 id="さいごに">さいごに</h2>
+
+<p>AWSのドキュメントはちゃんと読もうな、オレ。</p>
+
+      
+      
+      
+    </article>
+    
+ <aside><div id="disqus_thread"></div></aside>
+
+<script type="text/javascript">
+     
+    var disqus_shortname = 'blog-enokawa-co';
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+
+
+
+  </main>
+  
+  <nav class="pagination-single">
+    
+      <span class="previous">&larr; <a href="http://blog.enokawa.co/2016/10/19/yum-install-minor-version-mysql-in-centos/" rel="prev">CentOS7にマイナーバージョンのMySQLをyumでインストールしたい</a></span>
+    
+    
+      <span class="next"><a href="http://blog.enokawa.co/2016/10/27/set-specific-resource-the-migration-threshold-of-pcs/" rel="next">【pcs】特定リソースのmigration-thresholdを変更する</a> &rarr;</span>
+    
+  </nav>
+
+
+  
+  <footer role="contentinfo">
+    <div style="text-align:center;">
+      <img src="/images/profile.png" width="64" height="64"><br>
+      Written by Naoto Enokawa
+    </div>
+  </footer>
+
+
+</div>
+
+<script src="/js/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script>
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-64780065-1', 'auto');
+	ga('send', 'pageview');
+</script>
+
+</body>
+</html>
+

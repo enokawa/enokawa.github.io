@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Codecommit on あしたから本気だす</title>
+    <link>http://blog.enokawa.co/tags/codecommit/</link>
+    <description>Recent content in Codecommit on あしたから本気だす</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>ja-jp</language>
+    <lastBuildDate>Thu, 20 Oct 2016 13:05:13 +0900</lastBuildDate>
+    
+	<atom:link href="http://blog.enokawa.co/tags/codecommit/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>AWS CodeCommitのアクティブユーザについて</title>
+      <link>http://blog.enokawa.co/2016/10/20/about-the-aws-codecommit-active-user/</link>
+      <pubDate>Thu, 20 Oct 2016 13:05:13 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2016/10/20/about-the-aws-codecommit-active-user/</guid>
+      <description>はじめに こんにちは、えのかわです。
+CodeCommitのアクティブユーザの定義について意味を理解していなかったので懺悔します。
+甘かった僕の認識 最初の 5 人のアクティブユーザー*は無料」という表示で、「あっ、5つのIAMユーザまでは無料なんだ」と勘違いしていました。 しかし実際のドキュメントの内容は下記で、完璧に意味を履き違えていました。
+  アクティブユーザーとは、その月に Git リクエストまたは AWS マネジメントコンソールを使用して AWS CodeCommit リポジトリにアクセスする、すべての固有の AWS Identity (IAM ユーザー、IAM ロール、フェデレーティッドユーザー、ルートアカウント) を指します。一意の AWS アイデンティティを使用して CodeCommit にアクセスするサーバーは、アクティブなユーザーとみなされます。その月に AWS CodeCommit にアクセスしていないユーザーに対しては料金が発生しません。ストレージには、リポジトリのデータを保持するために必要な容量全体が含まれます。   料金 - Amazon CodeCommit | AWS https://aws.amazon.com/jp/codecommit/pricing/
+ということは 例えば5つのクライアントPCで同じIAMユーザ(SSH Key ID)を利用(Pull or Push)した場合、5アクティブユーザとしてみなされます。 僕の場合、1台のクライアントPCでPushやPullを行い、6台のEC2でpullのみを行いました。その結果additional CodeCommit user: 2 User-Monthとしてみなされました。
+さいごに AWSのドキュメントはちゃんと読もうな、オレ。</description>
+    </item>
+    
+    <item>
+      <title>OpsWorks &#43; CodeCommitでEC2をプロビジョニングする</title>
+      <link>http://blog.enokawa.co/2016/05/14/opsworks-codecommit/</link>
+      <pubDate>Sat, 14 May 2016 18:32:28 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2016/05/14/opsworks-codecommit/</guid>
+      <description>はじめに こんにちは、えのかわです。 今回はOpsWorks(Chef)でEC2インスタンスをプロビジョニングする際にCodeCommitレポジトリを利用してみました。 色々とハマったのでブログで残しておきます。 OpsWorksとCodeCommitについては下記スライドをご参考ください。超ざっくり言うとOpsWorksはAWSに特化したChefサーバで、CodeCommitはGitレポジトリです。
+  AWS OpsWorksハンズオン  from Amazon Web Services Japan 
+  AWS Black Belt Tech シリーズ 2015 - AWS CodeCommit &amp;amp; AWS CodePipeline &amp;amp; AWS CodeDeploy  from Amazon Web Services Japan 
+イメージ 図にするとこのような感じです。間違いがあったらご指摘ください。  クライアントPCからCodeCommitレポジトリにChefレシピをpush OpsWorks AgentがCodeCommitレポジトリをpull(更新) -&amp;gt; update_custom_cookbooks OpsWorks Agentがプロビジョニング(chef solo)を行う -&amp;gt; execute_recipes  CodeCommit用IAMユーザの作成 CodeCommitレポジトリへソースをプッシュするにはIAMユーザが必要になります。まず始めにCodeCommit専用のIAMユーザを作成します。ポリシーはひとまずAWSCodeCommitPowerUserを設定しておきます。 次にCodeCommitレポジトリにアクセスするためのSSHキーを設定します。Security CredentialsタブからUpload SSH public keyをクリックし、公開鍵を貼り付けてください。 公開鍵の設定が完了するとSSHアクセス用のIDが払い出されます。アクセスキーとは別です。 最後に~/.ssh/configにアクセス情報を記載しておきます。先ほど払い出されたSSH Key IDと、秘密鍵を指定します。
+enokawa $ cat ~/.ssh/config Host git-codecommit.</description>
+    </item>
+    
+  </channel>
+</rss>

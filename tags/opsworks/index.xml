@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Opsworks on あしたから本気だす</title>
+    <link>http://blog.enokawa.co/tags/opsworks/</link>
+    <description>Recent content in Opsworks on あしたから本気だす</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>ja-jp</language>
+    <lastBuildDate>Sat, 14 May 2016 18:32:28 +0900</lastBuildDate>
+    
+	<atom:link href="http://blog.enokawa.co/tags/opsworks/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>OpsWorks &#43; CodeCommitでEC2をプロビジョニングする</title>
+      <link>http://blog.enokawa.co/2016/05/14/opsworks-codecommit/</link>
+      <pubDate>Sat, 14 May 2016 18:32:28 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2016/05/14/opsworks-codecommit/</guid>
+      <description>はじめに こんにちは、えのかわです。 今回はOpsWorks(Chef)でEC2インスタンスをプロビジョニングする際にCodeCommitレポジトリを利用してみました。 色々とハマったのでブログで残しておきます。 OpsWorksとCodeCommitについては下記スライドをご参考ください。超ざっくり言うとOpsWorksはAWSに特化したChefサーバで、CodeCommitはGitレポジトリです。
+  AWS OpsWorksハンズオン  from Amazon Web Services Japan 
+  AWS Black Belt Tech シリーズ 2015 - AWS CodeCommit &amp;amp; AWS CodePipeline &amp;amp; AWS CodeDeploy  from Amazon Web Services Japan 
+イメージ 図にするとこのような感じです。間違いがあったらご指摘ください。  クライアントPCからCodeCommitレポジトリにChefレシピをpush OpsWorks AgentがCodeCommitレポジトリをpull(更新) -&amp;gt; update_custom_cookbooks OpsWorks Agentがプロビジョニング(chef solo)を行う -&amp;gt; execute_recipes  CodeCommit用IAMユーザの作成 CodeCommitレポジトリへソースをプッシュするにはIAMユーザが必要になります。まず始めにCodeCommit専用のIAMユーザを作成します。ポリシーはひとまずAWSCodeCommitPowerUserを設定しておきます。 次にCodeCommitレポジトリにアクセスするためのSSHキーを設定します。Security CredentialsタブからUpload SSH public keyをクリックし、公開鍵を貼り付けてください。 公開鍵の設定が完了するとSSHアクセス用のIDが払い出されます。アクセスキーとは別です。 最後に~/.ssh/configにアクセス情報を記載しておきます。先ほど払い出されたSSH Key IDと、秘密鍵を指定します。
+enokawa $ cat ~/.ssh/config Host git-codecommit.</description>
+    </item>
+    
+  </channel>
+</rss>

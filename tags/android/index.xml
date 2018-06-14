@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Android on あしたから本気だす</title>
+    <link>http://blog.enokawa.co/tags/android/</link>
+    <description>Recent content in Android on あしたから本気だす</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>ja-jp</language>
+    <lastBuildDate>Wed, 08 Jan 2014 23:02:51 +0900</lastBuildDate>
+    
+	<atom:link href="http://blog.enokawa.co/tags/android/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Android端末用カメラアプリ『モノカム』をリリースしました。</title>
+      <link>http://blog.enokawa.co/2014/01/08/monocam/</link>
+      <pubDate>Wed, 08 Jan 2014 23:02:51 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2014/01/08/monocam/</guid>
+      <description>こんにちは。エノカワです。
+この度、Android端末用アプリ『モノカム』を公開いたしました。 単純に白黒の写真がとれるカメラアプリでございます。 とてもショボい作りになっていて、画面をタッチすると、白黒の写真が Android端末に保存されるというシンプルなアプリです。
+白黒の写真しか撮れません。
+ご了承ください。
+絶対売れないだろうなーww
+というか無料だけど。
+優しい人、ダウンロードしてください。
+https://play.google.com/store/apps/details?id=com.enokawa.cam</description>
+    </item>
+    
+  </channel>
+</rss>
