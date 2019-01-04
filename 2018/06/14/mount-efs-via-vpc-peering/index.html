@@ -1,6 +1,4 @@
-
 <!DOCTYPE html>
-<html lang="ja-jp">
 <head>
 
   
@@ -12,9 +10,11 @@
 
   
   <meta name="viewport" content="width=device-width,user-scalable=no,maximum-scale=1,initial-scale=1">
+  <meta property="og:type" content="blog" />
+  <meta property="og:title" content="EFSをVPCペアリング経由でマウントする | あしたから本気だす" />
+  <meta property="og:url" content="http://blog.enokawa.co/2018/06/14/mount-efs-via-vpc-peering/" />
+  <meta property="og:image" content="http://enokawa.github.io/images/ogp.png">
 
-  
-  <link rel="canonical" href="http://blog.enokawa.co/2018/06/14/mount-efs-via-vpc-peering/"/>
 
   
   <link rel="stylesheet" href="/css/sanitize.css">
@@ -22,13 +22,9 @@
   <link rel="stylesheet" href="/css/highlight_monokai.css">
   <link rel="stylesheet" href="/css/theme.css">
   <link rel="stylesheet" href="/css/custom.css">
-  
-  
-  <link href="http://blog.enokawa.co/index.xml" rel="alternate" type="application/rss+xml" title="あしたから本気だす" />
-  <link href="http://blog.enokawa.co/index.xml" rel="feed" type="application/rss+xml" title="あしたから本気だす" />
 
   
-  
+  <link href="http://blog.enokawa.co//index.xml" rel="alternate" type="application/rss+xml" title="" />
 
 
 </head>
@@ -42,15 +38,14 @@
   <header role="banner">
     <div class="row gutters">
       <div id="site-title" class="col span_6">
-        <h1><a href="http://blog.enokawa.co/">あしたから本気だす</a></h1>
+        <h1><a href="/">あしたから本気だす</a></h1>
         
       </div>
       <div id="social" class="col span_6">
         <ul>
           <li><a href="https://twitter.com/enkw_" target="_blank">Twitter</a></li>
-          <li><a href="https://facebook.com/naoto.enokawa" target="_blank">Facebook</a></li>
-          <li><a href="https://github.com/enokawa" target="_blank">GitHub</a></li>
           
+          <li><a href="https://github.com/enokawa" target="_blank">GitHub</a></li>
         </ul>
       </div>
     </div>
@@ -77,7 +72,7 @@
 
 <h2 id="はじめに">はじめに</h2>
 
-<p>こんにちは<a href="https://twitter.com/enkw_">えのかわ</a>です。前回は単純に <a href="/2018/06/13/mount-efs-with-autofs/">autofs で EFS をマウント</a>しましたが、今回は VPC Peering経由でマウントしてみたいと思います。<br />
+<p>こんにちは<a href="https://twitter.com/enkw_">えのかわ</a>です。前回は単純に <a href="/2018/06/13/mount-efs-with-autofs/">autofs で EFS をマウント</a>しましたが、今回は VPC Peering経由でマウントしてみたいと思います。
 AWS のドキュメントには、VPN や VPC Peering 経由ではマウントできないとの記述があります。</p>
 
 <blockquote>
@@ -113,14 +108,14 @@ Run &quot;sudo yum update&quot; to apply all updates.
 
 <p>ポートフォワードしてみます。 <code>-fN</code> オプションを用いてバックグラウンドでプロセスを動かし続けます。</p>
 
-<pre><code>[ec2-user@ip-10-0-0-79 ~]$ ssh -i .ssh/enokawa-kensho-us-west-2.pem -fN -L 2049:us-west-2a.fs-xxxxxxxx.efs.us-west-2.amazonaws.com:2049 ec2-user@172.31.38.154
+<pre><code class="language-sh">[ec2-user@ip-10-0-0-79 ~]$ ssh -i .ssh/enokawa-kensho-us-west-2.pem -fN -L 2049:us-west-2a.fs-xxxxxxxx.efs.us-west-2.amazonaws.com:2049 ec2-user@172.31.38.154
 [ec2-user@ip-10-0-0-79 ~]$ ps aux | grep &quot;ssh -[i]&quot;
 ec2-user  2839  0.0  0.0 173520   884 ?        Ss   03:47   0:00 ssh -i .ssh/enokawa-kensho-us-west-2.pem -fN -L 2049:us-west-2a.fs-xxxxxxxx.efs.us-west-2.amazonaws.com:2049 ec2-user@172.31.38.154
 </code></pre>
 
 <p>マウントしてみます。</p>
 
-<pre><code>[ec2-user@ip-10-0-0-79 ~]$ sudo mkdir /exports
+<pre><code class="language-sh">[ec2-user@ip-10-0-0-79 ~]$ sudo mkdir /exports
 [ec2-user@ip-10-0-0-79 ~]$ sudo mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 localhost:/ /exports
 [ec2-user@ip-10-0-0-79 ~]$ df -h
 Filesystem      Size  Used Avail Use% Mounted on
@@ -136,12 +131,9 @@ localhost:/     8.0E     0  8.0E   0% /exports
 
 <p>オンプレミス環境などから EFS をマウントする場合は DirectConnect 経由の方がよさそうです。</p>
 
-      
-      
-      
     </article>
     
- <aside><div id="disqus_thread"></div></aside>
+ <aside><div id="disqus_thread"></div></aside> 
 
 <script type="text/javascript">
      
@@ -156,16 +148,7 @@ localhost:/     8.0E     0  8.0E   0% /exports
 </script>
 <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
 
-
-
   </main>
-  
-  <nav class="pagination-single">
-    
-      <span class="previous">&larr; <a href="http://blog.enokawa.co/2018/06/13/mount-efs-with-autofs/" rel="prev">autofsでEFSをマウントする</a></span>
-    
-    
-  </nav>
 
 
   

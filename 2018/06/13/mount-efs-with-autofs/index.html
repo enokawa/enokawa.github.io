@@ -1,6 +1,4 @@
-
 <!DOCTYPE html>
-<html lang="ja-jp">
 <head>
 
   
@@ -12,9 +10,11 @@
 
   
   <meta name="viewport" content="width=device-width,user-scalable=no,maximum-scale=1,initial-scale=1">
+  <meta property="og:type" content="blog" />
+  <meta property="og:title" content="autofsでEFSをマウントする | あしたから本気だす" />
+  <meta property="og:url" content="http://blog.enokawa.co/2018/06/13/mount-efs-with-autofs/" />
+  <meta property="og:image" content="http://enokawa.github.io/images/ogp.png">
 
-  
-  <link rel="canonical" href="http://blog.enokawa.co/2018/06/13/mount-efs-with-autofs/"/>
 
   
   <link rel="stylesheet" href="/css/sanitize.css">
@@ -22,13 +22,9 @@
   <link rel="stylesheet" href="/css/highlight_monokai.css">
   <link rel="stylesheet" href="/css/theme.css">
   <link rel="stylesheet" href="/css/custom.css">
-  
-  
-  <link href="http://blog.enokawa.co/index.xml" rel="alternate" type="application/rss+xml" title="あしたから本気だす" />
-  <link href="http://blog.enokawa.co/index.xml" rel="feed" type="application/rss+xml" title="あしたから本気だす" />
 
   
-  
+  <link href="http://blog.enokawa.co//index.xml" rel="alternate" type="application/rss+xml" title="" />
 
 
 </head>
@@ -42,15 +38,14 @@
   <header role="banner">
     <div class="row gutters">
       <div id="site-title" class="col span_6">
-        <h1><a href="http://blog.enokawa.co/">あしたから本気だす</a></h1>
+        <h1><a href="/">あしたから本気だす</a></h1>
         
       </div>
       <div id="social" class="col span_6">
         <ul>
           <li><a href="https://twitter.com/enkw_" target="_blank">Twitter</a></li>
-          <li><a href="https://facebook.com/naoto.enokawa" target="_blank">Facebook</a></li>
-          <li><a href="https://github.com/enokawa" target="_blank">GitHub</a></li>
           
+          <li><a href="https://github.com/enokawa" target="_blank">GitHub</a></li>
         </ul>
       </div>
     </div>
@@ -67,8 +62,6 @@
           #<a href="/tags/aws">aws</a>&nbsp;
         
           #<a href="/tags/ec2">ec2</a>&nbsp;
-        
-          #<a href="/tags/efs">efs</a>&nbsp;
         
           #<a href="/tags/autofs">autofs</a>&nbsp;
         
@@ -92,7 +85,7 @@
 <p>autofs をインストールしてマウントポイント用のディレクトリを作成します。</p>
 
 <pre><code class="language-sh">[ec2-user@ip-172-31-38-110 ~]$ sudo yum install autofs
-[ec2-user@ip-172-31-38-110 ~]$ sudo mkdir /exports
+[ec2-user@ip-172-31-38-110 ~]$ mkdir /exports
 </code></pre>
 
 <p>続いて autofs の設定です。</p>
@@ -121,7 +114,7 @@ Filesystem                                            Size  Used Avail Use% Moun
 devtmpfs                                              484M   56K  484M   1% /dev
 tmpfs                                                 494M     0  494M   0% /dev/shm
 /dev/xvda1                                            7.8G  1.1G  6.7G  14% /
-us-west-2a.fs-xxxxxxxx.efs.us-west-2.amazonaws.com:/  8.0E     0  8.0E   0% /exports
+us-west-2a.fs-0dee8ea4.efs.us-west-2.amazonaws.com:/  8.0E     0  8.0E   0% /exports
 [ec2-user@ip-172-31-38-110 exports]$
 [ec2-user@ip-172-31-38-110 exports]$ cat /proc/mounts  | grep exports
 /etc/auto.nfs /exports autofs rw,relatime,fd=19,pgrp=29007,timeout=3,minproto=5,maxproto=5,direct 0 0
@@ -134,12 +127,9 @@ us-west-2a.fs-xxxxxxxx.efs.us-west-2.amazonaws.com:/ /exports nfs4 rw,relatime,v
 EFS の欠点として、バックアップの機能が無いことが挙げられますので、別途そこは作り込む必要ありますね。既に実装している記事も見かけます。<br />
 EFS の標準機能としてバックアップ/リストアの機能がリリースされることを待ちましょう。</p>
 
-      
-      
-      
     </article>
     
- <aside><div id="disqus_thread"></div></aside>
+ <aside><div id="disqus_thread"></div></aside> 
 
 <script type="text/javascript">
      
@@ -154,18 +144,7 @@ EFS の標準機能としてバックアップ/リストアの機能がリリー
 </script>
 <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
 
-
-
   </main>
-  
-  <nav class="pagination-single">
-    
-      <span class="previous">&larr; <a href="http://blog.enokawa.co/2018/02/14/dawn/" rel="prev">Serverless FrameworkでEC2を定期的に起動/停止するdawnを公開しました</a></span>
-    
-    
-      <span class="next"><a href="http://blog.enokawa.co/2018/06/14/mount-efs-via-vpc-peering/" rel="next">EFSをVPCペアリング経由でマウントする</a> &rarr;</span>
-    
-  </nav>
 
 
   

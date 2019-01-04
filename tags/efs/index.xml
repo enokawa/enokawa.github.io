@@ -6,7 +6,7 @@
     <description>Recent content in Efs on あしたから本気だす</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ja-jp</language>
-    <lastBuildDate>Thu, 14 Jun 2018 12:15:49 +0900</lastBuildDate>
+    <lastBuildDate>Thu, 14 Jun 2018 23:02:51 +0900</lastBuildDate>
     
 	<atom:link href="http://blog.enokawa.co/tags/efs/index.xml" rel="self" type="application/rss+xml" />
     
@@ -14,32 +14,16 @@
     <item>
       <title>EFSをVPCペアリング経由でマウントする</title>
       <link>http://blog.enokawa.co/2018/06/14/mount-efs-via-vpc-peering/</link>
-      <pubDate>Thu, 14 Jun 2018 12:15:49 +0900</pubDate>
+      <pubDate>Thu, 14 Jun 2018 23:02:51 +0900</pubDate>
       
       <guid>http://blog.enokawa.co/2018/06/14/mount-efs-via-vpc-peering/</guid>
-      <description>はじめに こんにちはえのかわです。前回は単純に autofs で EFS をマウントしましたが、今回は VPC Peering経由でマウントしてみたいと思います。
-AWS のドキュメントには、VPN や VPC Peering 経由ではマウントできないとの記述があります。
+      <description>はじめに こんにちはえのかわです。前回は単純に autofs で EFS をマウントしましたが、今回は VPC Peering経由でマウントしてみたいと思います。 AWS のドキュメントには、VPN や VPC Peering 経由ではマウントできないとの記述があります。
  AWS Direct Connect を使用して、オンプレミスのデータセンターサーバーから Amazon EFS ファイルシステムをマウントできます。ただし、VPN 接続や VPC ピア接続などの他の VPC プライベート接続機能はサポートされていません。
  https://docs.aws.amazon.com/ja_jp/efs/latest/ug/limits.html
 クラメソさんの記事を参考にさせてもらいました。
 SSH ポートフォワーディングを使って EFS を Mac からマウントしてみた
 AWS リソース作成 こんな感じで作成しました。東京リージョンからオレゴンリージョンの EC2 を経由して EFS をマウントします。RouteTable や SecurityGroup の設定はお互い通信できるように事前に済ませておきましょう。 EC2設定(東京側) オレゴン側の設定は特に必要ありません。こういう感じで東京の EC2 からオレゴンの EC2 に SSH できるように設定しておきます。
 [ec2-user@ip-10-0-0-79 ~]$ ssh -i .ssh/enokawa-kensho-us-west-2.pem ec2-user@172.31.38.154 Last login: Thu Jun 14 03:40:07 2018 from 10.0.0.79 __| __|_ ) _| ( / Amazon Linux AMI ___|\___|___| https://aws.</description>
-    </item>
-    
-    <item>
-      <title>autofsでEFSをマウントする</title>
-      <link>http://blog.enokawa.co/2018/06/13/mount-efs-with-autofs/</link>
-      <pubDate>Wed, 13 Jun 2018 15:05:15 +0900</pubDate>
-      
-      <guid>http://blog.enokawa.co/2018/06/13/mount-efs-with-autofs/</guid>
-      <description>はじめに こんにちはえのかわです。EFS、東京リージョン対応がアナウンスされましたね。
-リリース前にちょいと検証してみます。単純にマウントするだけではつまらないので autofs でマウントしてみます。
-AWS リソース作成 こんな感じで作成しました。リージョンはオレゴンでやってます。OS は Amazon Linux です。 EC2設定 autofs をインストールしてマウントポイント用のディレクトリを作成します。
-[ec2-user@ip-172-31-38-110 ~]$ sudo yum install autofs [ec2-user@ip-172-31-38-110 ~]$ sudo mkdir /exports  続いて autofs の設定です。
-[ec2-user@ip-172-31-38-110 ~]$ sudo sh -c &amp;quot;echo &#39;/- /etc/auto.nfs --timeout=3&#39; &amp;gt;&amp;gt; /etc/auto.master&amp;quot; [ec2-user@ip-172-31-38-110 ~]$ cat /etc/auto.nfs /exports -nfsvers=4.1 us-west-2a.fs-xxxxxxxx.efs.us-west-2.amazonaws.com:/  autofs 起動します。
-[ec2-user@ip-172-31-38-110 ~]$ sudo /etc/init.d/autofs start Starting automount: [ OK ]  /exports ディレクトリに移動するとマウントされていることが確認できました。
-[ec2-user@ip-172-31-38-110 ~]$ df -h Filesystem Size Used Avail Use% Mounted on devtmpfs 484M 56K 484M 1% /dev tmpfs 494M 0 494M 0% /dev/shm /dev/xvda1 7.</description>
     </item>
     
   </channel>

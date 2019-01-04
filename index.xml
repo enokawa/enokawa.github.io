@@ -6,19 +6,35 @@
     <description>Recent content on あしたから本気だす</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ja-jp</language>
-    <lastBuildDate>Thu, 14 Jun 2018 12:15:49 +0900</lastBuildDate>
+    <lastBuildDate>Fri, 04 Jan 2019 01:55:00 +0900</lastBuildDate>
     
 	<atom:link href="http://blog.enokawa.co/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
+      <title>2018年振り返り</title>
+      <link>http://blog.enokawa.co/2019/01/04/2018/</link>
+      <pubDate>Fri, 04 Jan 2019 01:55:00 +0900</pubDate>
+      
+      <guid>http://blog.enokawa.co/2019/01/04/2018/</guid>
+      <description>はじめに こんにちはえのかわです。もう 2019 年になってしまいましたが、2018 年を振り返ってみたいと思います。
+2018年の目標 ブログでは公言していなかったのですが、2018 年の目標は↓。
+結果、達成できた目標は 1 のみでした。2 と 3 の目標設定が曖昧だったのは良くなかったと反省。
+AWS 認定 DevOps Professional を取得できたのは良かった。10 月に AWS 認定 Big Data - Specialty も受けたけど落ちた。今年は取る。
+2018年振り返り 改めて本題の振り返り。2018 年はとにかく仕事が忙しかった。ありがたいことに自分(のチーム)の持っている案件も右肩上がりに増えていき、日々 AWS 上でのインフラ構築、二次運用、アラート対応に追われていた。その分、自分のスキルアップの為の勉強時間を捻出することがあまりできなかった。
+2018 年の output は↓。少ねぇ、、
+ Serverless FrameworkでEC2を定期的に起動/停止するdawnを公開しました AWSに関するありがちミスとその対策〜EC2、S3、RDS、Lambda、CloudFrontの場合 - エンジニアHub｜若手Webエンジニアのキャリアを考える！  あと全然コードを書いていない。Terraform や Chef などで Infrastructure as a Code っぽいことはしてるけど、コードを書いたとは言えない。危機感しかない。死ぬ。
+2019年どうする 目標は↓。
+ 5 つの OSS にコントリビュートする Go 言語で 1 つ OSS を公開する コンテナを人に説明できるレベルまで理解する  とりあえずコードを書くことに重きを置きたい。なぜ JavaScript ではなく Go かというと、やはりインフラ関連の仕事なのでシングルバイナリで CLI ツールなどを配布できることが大きい。コマンドラインツールを作成してインフラ構築や運用改善に役立てたい。まずはこれ読む。写経しよ。</description>
+    </item>
+    
+    <item>
       <title>EFSをVPCペアリング経由でマウントする</title>
       <link>http://blog.enokawa.co/2018/06/14/mount-efs-via-vpc-peering/</link>
-      <pubDate>Thu, 14 Jun 2018 12:15:49 +0900</pubDate>
+      <pubDate>Thu, 14 Jun 2018 23:02:51 +0900</pubDate>
       
       <guid>http://blog.enokawa.co/2018/06/14/mount-efs-via-vpc-peering/</guid>
-      <description>はじめに こんにちはえのかわです。前回は単純に autofs で EFS をマウントしましたが、今回は VPC Peering経由でマウントしてみたいと思います。
-AWS のドキュメントには、VPN や VPC Peering 経由ではマウントできないとの記述があります。
+      <description>はじめに こんにちはえのかわです。前回は単純に autofs で EFS をマウントしましたが、今回は VPC Peering経由でマウントしてみたいと思います。 AWS のドキュメントには、VPN や VPC Peering 経由ではマウントできないとの記述があります。
  AWS Direct Connect を使用して、オンプレミスのデータセンターサーバーから Amazon EFS ファイルシステムをマウントできます。ただし、VPN 接続や VPC ピア接続などの他の VPC プライベート接続機能はサポートされていません。
  https://docs.aws.amazon.com/ja_jp/efs/latest/ug/limits.html
 クラメソさんの記事を参考にさせてもらいました。
@@ -30,13 +46,13 @@ AWS リソース作成 こんな感じで作成しました。東京リージョ
     <item>
       <title>autofsでEFSをマウントする</title>
       <link>http://blog.enokawa.co/2018/06/13/mount-efs-with-autofs/</link>
-      <pubDate>Wed, 13 Jun 2018 15:05:15 +0900</pubDate>
+      <pubDate>Wed, 13 Jun 2018 23:02:51 +0900</pubDate>
       
       <guid>http://blog.enokawa.co/2018/06/13/mount-efs-with-autofs/</guid>
       <description>はじめに こんにちはえのかわです。EFS、東京リージョン対応がアナウンスされましたね。
 リリース前にちょいと検証してみます。単純にマウントするだけではつまらないので autofs でマウントしてみます。
 AWS リソース作成 こんな感じで作成しました。リージョンはオレゴンでやってます。OS は Amazon Linux です。 EC2設定 autofs をインストールしてマウントポイント用のディレクトリを作成します。
-[ec2-user@ip-172-31-38-110 ~]$ sudo yum install autofs [ec2-user@ip-172-31-38-110 ~]$ sudo mkdir /exports  続いて autofs の設定です。
+[ec2-user@ip-172-31-38-110 ~]$ sudo yum install autofs [ec2-user@ip-172-31-38-110 ~]$ mkdir /exports  続いて autofs の設定です。
 [ec2-user@ip-172-31-38-110 ~]$ sudo sh -c &amp;quot;echo &#39;/- /etc/auto.nfs --timeout=3&#39; &amp;gt;&amp;gt; /etc/auto.master&amp;quot; [ec2-user@ip-172-31-38-110 ~]$ cat /etc/auto.nfs /exports -nfsvers=4.1 us-west-2a.fs-xxxxxxxx.efs.us-west-2.amazonaws.com:/  autofs 起動します。
 [ec2-user@ip-172-31-38-110 ~]$ sudo /etc/init.d/autofs start Starting automount: [ OK ]  /exports ディレクトリに移動するとマウントされていることが確認できました。
 [ec2-user@ip-172-31-38-110 ~]$ df -h Filesystem Size Used Avail Use% Mounted on devtmpfs 484M 56K 484M 1% /dev tmpfs 494M 0 494M 0% /dev/shm /dev/xvda1 7.</description>
